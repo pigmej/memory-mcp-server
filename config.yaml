@@ -1,0 +1,91 @@
+# Memory MCP Server Configuration
+# This file contains the configurable options that are actually implemented
+
+# Database Configuration
+database:
+  # Database connection URL
+  # SQLite (default): sqlite:///memory_mcp.db
+  # PostgreSQL: postgresql://user:password@localhost/memory_mcp
+  # MySQL: mysql://user:password@localhost/memory_mcp
+  url: "sqlite:///memory_mcp.db"
+  
+  # Enable SQLAlchemy query logging (useful for debugging)
+  echo: false
+  
+  # Connection pool settings (for non-SQLite databases)
+  pool_size: 5
+  max_overflow: 10
+
+# Server Configuration
+server:
+  # Server host (use "0.0.0.0" to accept connections from any IP)
+  host: "localhost"
+  
+  # HTTP API server port
+  http_port: 8000
+  
+  # Web UI server port
+  web_port: 8080
+  
+  # Enable/disable different server components
+  stdio_enabled: true   # MCP STDIO protocol
+  http_enabled: true    # HTTP REST API
+  web_enabled: true     # Web UI interface
+  
+  # CORS settings for web requests
+  cors_origins:
+    - "*"  # Allow all origins (change for production)
+
+# Embedding and Search Configuration
+embedding:
+  # Sentence transformer model for semantic search
+  # Popular options:
+  # - "all-MiniLM-L6-v2" (default) - Fast, lightweight, 384 dimensions
+  # - "all-mpnet-base-v2" - Better quality, 768 dimensions
+  # - "all-distilroberta-v1" - Good balance, 768 dimensions
+  # - "paraphrase-multilingual-MiniLM-L12-v2" - Multilingual support
+  model_name: "paraphrase-multilingual-MiniLM-L12-v2"
+  
+  # Minimum similarity threshold for semantic search (0.0-1.0)
+  # Lower values = more results, higher values = more precise results
+  similarity_threshold: 0.3
+  
+  # Maximum number of search results to return
+  max_results: 10
+  
+  # Whether to cache embeddings in database for faster searches
+  cache_embeddings: true
+
+# Logging Configuration
+logging:
+  # Log level: DEBUG, INFO, WARNING, ERROR, CRITICAL
+  level: "INFO"
+  
+  # Log format string
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  
+  # Optional: Log to file (uncomment to enable)
+  # file_path: "memory_mcp.log"
+  
+  # Maximum log file size in bytes (10MB)
+  max_file_size: 10485760
+  
+  # Number of backup log files to keep
+  backup_count: 5
+
+# General Settings
+# Environment name (development, production, testing)
+environment: "development"
+
+# Data directory for storing database and other files
+# Default: ~/.memory_mcp (user's home directory)
+# data_dir: "/path/to/custom/data/directory"
+
+# Optional: Path to this config file (auto-detected)
+# config_file: "config.yaml"
+
+# Note: The following features are defined in the code but not yet implemented:
+# - Feature flags (enable_web_ui, enable_rag, enable_user_separation)
+# - Embedding dimension configuration (auto-detected from model)
+# - Semantic weight configuration (hardcoded to 0.7)
+# - Auto-indexing configuration (always enabled)

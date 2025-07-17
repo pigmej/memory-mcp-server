@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Memory MCP Server{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Dashboard</h1>
+    <p class="page-description">Overview of your memory data</p>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <span class="stat-number">{{ stats.aliases }}</span>
+        <span class="stat-label">Aliases</span>
+    </div>
+    <div class="stat-card">
+        <span class="stat-number">{{ stats.notes }}</span>
+        <span class="stat-label">Notes</span>
+    </div>
+    <div class="stat-card">
+        <span class="stat-number">{{ stats.observations }}</span>
+        <span class="stat-label">Observations</span>
+    </div>
+    <div class="stat-card">
+        <span class="stat-number">{{ stats.hints }}</span>
+        <span class="stat-label">Hints</span>
+    </div>
+    <div class="stat-card">
+        <span class="stat-number">{{ stats.total }}</span>
+        <span class="stat-label">Total Items</span>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Quick Actions</h2>
+    </div>
+    <div class="card-body">
+        <div class="d-flex gap-2">
+            <a href="{{ mount_path }}/aliases" class="btn btn-primary">Manage Aliases</a>
+            <a href="{{ mount_path }}/notes" class="btn btn-primary">Manage Notes</a>
+            <a href="{{ mount_path }}/observations" class="btn btn-primary">Manage Observations</a>
+            <a href="{{ mount_path }}/hints" class="btn btn-primary">Manage Hints</a>
+            <a href="{{ mount_path }}/search" class="btn btn-secondary">Search All</a>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">About Memory MCP Server</h2>
+    </div>
+    <div class="card-body">
+        <p>This web interface allows you to manage your memory data stored in the MCP server. You can:</p>
+        <ul style="margin-top: 1rem; padding-left: 2rem;">
+            <li><strong>Aliases:</strong> Create bidirectional mappings between terms and phrases</li>
+            <li><strong>Notes:</strong> Store personal information and reminders</li>
+            <li><strong>Observations:</strong> Record contextual information about entities</li>
+            <li><strong>Hints:</strong> Store guidance for LLM interactions</li>
+            <li><strong>Search:</strong> Find information across all memory types</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

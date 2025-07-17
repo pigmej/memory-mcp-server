@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+{% block title %}Search - Memory MCP Server{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Search</h1>
+    <p class="page-description">Find information across all memory types</p>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Search Your Memory</h2>
+    </div>
+    <div class="card-body">
+        <form method="get" action="{{ mount_path }}/search" class="search-form">
+            <div class="search-input-group">
+                <input type="text" name="q" value="{{ query }}" class="form-control search-input" 
+                       placeholder="Enter your search query..." autofocus>
+                <button type="submit" class="btn btn-primary">Search</button>
+            </div>
+            <div class="search-filters mt-2">
+                <div class="d-flex gap-2 align-items-center">
+                    <label class="form-label mb-0">Filter by type:</label>
+                    <div class="form-check">
+                        <input type="checkbox" id="filter_aliases" name="types" value="alias" class="form-check-input"
+                               {% if not request.query_params.getlist('types') or 'alias' in request.query_params.getlist('types') %}checked{% endif %}>
+                        <label for="filter_aliases" class="form-check-label">Aliases</label>
+                    </div>
+                    <div class="form-check">
+                        <input type="checkbox" id="filter_notes" name="types" value="note" class="form-check-input"
+                               {% if not request.query_params.getlist('types') or 'note' in request.query_params.getlist('types') %}checked{% endif %}>
+                        <label for="filter_notes" class="form-check-label">Notes</label>
+                    </div>
+                    <div class="form-check">
+                        <input type="checkbox" id="filter_observations" name="types" value="observation" class="form-check-input"
+                               {% if not request.query_params.getlist('types') or 'observation' in request.query_params.getlist('types') %}checked{% endif %}>
+                        <label for="filter_observations" class="form-check-label">Observations</label>
+                    </div>
+                    <div class="form-check">
+                        <input type="checkbox" id="filter_hints" name="types" value="hint" class="form-check-input"
+                               {% if not request.query_params.getlist('types') or 'hint' in request.query_params.getlist('types') %}checked{% endif %}>
+                        <label for="filter_hints" class="form-check-label">Hints</label>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if query %}
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h2 class="card-title mb-0">
+            Search Results for "{{ query }}"
+            {% if results %}({{ results|length }} found){% endif %}
+        </h2>
+        {% if results %}
+        <div class="d-flex gap-1">
+            <a href="{{ mount_path }}/search/export?q={{ query }}&format=json{% for type in request.query_params.getlist('types') %}&types={{ type }}{% endfor %}" 
+               class="btn btn-secondary btn-sm">Export JSON</a>
+            <a href="{{ mount_path }}/search/export?q={{ query }}&format=csv{% for type in request.query_params.getlist('types') %}&types={{ type }}{% endfor %}" 
+               class="btn btn-secondary btn-sm">Export CSV</a>
+        </div>
+        {% endif %}
+    </div>
+    <div class="card-body">
+        {% if results %}
+        <div class="search-results">
+            {% for result in results %}
+            <div class="search-result">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div class="search-result-type">{{ result.type }}</div>
+                    {% if result.score %}
+                    <div class="search-result-score" style="background-color: #f8f9fa; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; color: #6c757d;">
+                        Score: {{ "%.2f"|format(result.score) }}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="search-result-title">
+                    {% if result.type == 'alias' %}
+                        {{ result.source }} ↔ {{ result.target }}
+                    {% elif result.type == 'note' %}
+                        {{ result.title }}
+                    {% elif result.type == 'observation' %}
+                        {{ result.entity_type }}: {{ result.entity_id }}
+                    {% elif result.type == 'hint' %}
+                        {{ result.category }} Hint
+                        {% if result.workflow_context %}({{ result.workflow_context }}){% endif %}
+                    {% endif %}
+                </div>
+                <div class="search-result-content">
+                    {% if result.type == 'alias' %}
+                        Bidirectional alias mapping between "{{ result.source }}" and "{{ result.target }}"
+                        {% if result.user_id %} • User: {{ result.user_id }}{% endif %}
+                    {% elif result.type == 'note' %}
+                        {{ result.content[:200] }}{% if result.content|length > 200 %}...{% endif %}
+                        {% if result.category %} • Category: {{ result.category }}{% endif %}
+                        {% if result.user_id %} • User: {{ result.user_id }}{% endif %}
+                    {% elif result.type == 'observation' %}
+                        {{ result.content[:200] }}{% if result.content|length > 200 %}...{% endif %}
+                        {% if result.user_id %} • User: {{ result.user_id }}{% endif %}
+                    {% elif result.type == 'hint' %}
+                        {{ result.content[:200] }}{% if result.content|length > 200 %}...{% endif %}
+                        • Priority: {{ result.priority }}
+                        {% if result.user_id %} • User: {{ result.user_id }}{% endif %}
+                    {% endif %}
+                </div>
+                {% if result.created_at %}
+                <div class="text-muted mt-1" style="font-size: 0.75rem;">
+                    Created: {{ result.created_at.strftime('%Y-%m-%d %H:%M') }}
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center text-muted">
+            <p>No results found for "{{ query }}"</p>
+            <p>Try different keywords or check your spelling.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+{% if not query %}
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Search Tips</h2>
+    </div>
+    <div class="card-body">
+        <ul style="padding-left: 2rem;">
+            <li>Search across all memory types: aliases, notes, observations, and hints</li>
+            <li>Use specific keywords for better results</li>
+            <li>Search is case-insensitive</li>
+            <li>Results are ranked by relevance</li>
+            <li>Both exact and semantic matching are supported</li>
+        </ul>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}Hints - Memory MCP Server{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Hints</h1>
+    <p class="page-description">Store guidance for LLM interactions</p>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Add New Hint</h2>
+    </div>
+    <div class="card-body">
+        <form method="post" action="{{ mount_path }}/hints/create">
+            <div class="form-group">
+                <label for="content" class="form-label">Hint Content</label>
+                <textarea id="content" name="content" class="form-control" rows="4" required 
+                          placeholder="Provide guidance or context for AI interactions..."></textarea>
+            </div>
+            <div class="form-group">
+                <label for="category" class="form-label">Category</label>
+                <input type="text" id="category" name="category" class="form-control" required 
+                       placeholder="e.g., coding, writing, analysis, workflow">
+            </div>
+            <div class="form-group">
+                <label for="priority" class="form-label">Priority</label>
+                <select id="priority" name="priority" class="form-control">
+                    <option value="1">1 - Low</option>
+                    <option value="2">2 - Medium</option>
+                    <option value="3" selected>3 - High</option>
+                    <option value="4">4 - Critical</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="workflow_context" class="form-label">Workflow Context (optional)</label>
+                <input type="text" id="workflow_context" name="workflow_context" class="form-control" 
+                       placeholder="Specific workflow or context where this hint applies">
+            </div>
+            <div class="form-group">
+                <label for="user_id" class="form-label">User ID (optional)</label>
+                <input type="text" id="user_id" name="user_id" class="form-control">
+            </div>
+            <button type="submit" class="btn btn-primary">Create Hint</button>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Your Hints ({{ hints|length }})</h2>
+    </div>
+    <div class="card-body">
+        {% if hints %}
+        <div class="hints-list">
+            {% for hint in hints %}
+            <div class="card mb-3">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div class="d-flex gap-1 align-items-center">
+                        <span class="badge" style="background-color: #f39c12; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">
+                            {{ hint.category }}
+                        </span>
+                        <span class="badge" style="background-color: 
+                            {% if hint.priority == 1 %}#95a5a6{% elif hint.priority == 2 %}#3498db{% elif hint.priority == 3 %}#e67e22{% else %}#e74c3c{% endif %}; 
+                            color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">
+                            Priority {{ hint.priority }}
+                        </span>
+                        {% if hint.workflow_context %}
+                        <span class="badge" style="background-color: #9b59b6; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">
+                            {{ hint.workflow_context }}
+                        </span>
+                        {% endif %}
+                    </div>
+                    <form method="post" action="{{ mount_path }}/hints/{{ hint.id }}/delete" style="display: inline;">
+                        <button type="submit" class="btn btn-danger btn-sm" 
+                                onclick="return confirm('Are you sure you want to delete this hint?')">
+                            Delete
+                        </button>
+                    </form>
+                </div>
+                <div class="card-body">
+                    <p style="white-space: pre-wrap; margin-bottom: 1rem;">{{ hint.content }}</p>
+                    <div class="text-muted" style="font-size: 0.875rem;">
+                        {% if hint.user_id %}User: {{ hint.user_id }} • {% endif %}
+                        Created: {{ hint.created_at.strftime('%Y-%m-%d %H:%M') if hint.created_at else 'N/A' }}
+                        {% if hint.updated_at and hint.updated_at != hint.created_at %}
+                        • Updated: {{ hint.updated_at.strftime('%Y-%m-%d %H:%M') }}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-muted text-center">No hints found. Create your first hint above!</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

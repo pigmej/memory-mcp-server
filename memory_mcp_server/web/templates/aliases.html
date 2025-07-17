@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}Aliases - Memory MCP Server{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Aliases</h1>
+    <p class="page-description">Manage bidirectional term mappings</p>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Add New Alias</h2>
+    </div>
+    <div class="card-body">
+        <form method="post" action="{{ mount_path }}/aliases/create">
+            <div class="form-group">
+                <label for="source" class="form-label">Source Term</label>
+                <input type="text" id="source" name="source" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label for="target" class="form-label">Target Term</label>
+                <input type="text" id="target" name="target" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label for="user_id" class="form-label">User ID (optional)</label>
+                <input type="text" id="user_id" name="user_id" class="form-control">
+            </div>
+            <div class="form-check">
+                <input type="checkbox" id="bidirectional" name="bidirectional" class="form-check-input" checked>
+                <label for="bidirectional" class="form-label">Bidirectional (works both ways)</label>
+            </div>
+            <button type="submit" class="btn btn-primary">Create Alias</button>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Existing Aliases ({{ aliases|length }})</h2>
+    </div>
+    <div class="card-body">
+        {% if aliases %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Source</th>
+                    <th>Target</th>
+                    <th>User</th>
+                    <th>Bidirectional</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for alias in aliases %}
+                <tr>
+                    <td><strong>{{ alias.source }}</strong></td>
+                    <td><strong>{{ alias.target }}</strong></td>
+                    <td>{{ alias.user_id or 'N/A' }}</td>
+                    <td>
+                        {% if alias.bidirectional %}
+                            <span style="color: green;">✓ Yes</span>
+                        {% else %}
+                            <span style="color: red;">✗ No</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ alias.created_at.strftime('%Y-%m-%d %H:%M') if alias.created_at else 'N/A' }}</td>
+                    <td>
+                        <form method="post" action="{{ mount_path }}/aliases/{{ alias.id }}/delete" style="display: inline;">
+                            <button type="submit" class="btn btn-danger btn-sm" 
+                                    onclick="return confirm('Are you sure you want to delete this alias?')">
+                                Delete
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="text-muted text-center">No aliases found. Create your first alias above!</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Memory MCP Server{% endblock %}</title>
+    <link href="{{ mount_path }}/static/style.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <h1 class="nav-title">
+                <a href="{{ mount_path }}/">Memory MCP Server</a>
+            </h1>
+            <ul class="nav-menu">
+                <li><a href="{{ mount_path }}/" class="nav-link">Dashboard</a></li>
+                <li><a href="{{ mount_path }}/aliases" class="nav-link">Aliases</a></li>
+                <li><a href="{{ mount_path }}/notes" class="nav-link">Notes</a></li>
+                <li><a href="{{ mount_path }}/observations" class="nav-link">Observations</a></li>
+                <li><a href="{{ mount_path }}/hints" class="nav-link">Hints</a></li>
+                <li><a href="{{ mount_path }}/search" class="nav-link">Search</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <div class="container">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 Memory MCP Server. A lightweight memory server with MCP protocol support.</p>
+        </div>
+    </footer>
+</body>
+</html>

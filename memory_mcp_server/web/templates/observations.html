@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Observations - Memory MCP Server{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Observations</h1>
+    <p class="page-description">Record contextual information about entities</p>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Add New Observation</h2>
+    </div>
+    <div class="card-body">
+        <form method="post" action="{{ mount_path }}/observations/create">
+            <div class="form-group">
+                <label for="content" class="form-label">Observation Content</label>
+                <textarea id="content" name="content" class="form-control" rows="4" required 
+                          placeholder="Describe what you observed..."></textarea>
+            </div>
+            <div class="form-group">
+                <label for="entity_type" class="form-label">Entity Type</label>
+                <input type="text" id="entity_type" name="entity_type" class="form-control" required 
+                       placeholder="e.g., person, project, document, meeting">
+            </div>
+            <div class="form-group">
+                <label for="entity_id" class="form-label">Entity ID</label>
+                <input type="text" id="entity_id" name="entity_id" class="form-control" required 
+                       placeholder="Unique identifier for the entity">
+            </div>
+            <div class="form-group">
+                <label for="user_id" class="form-label">User ID (optional)</label>
+                <input type="text" id="user_id" name="user_id" class="form-control">
+            </div>
+            <button type="submit" class="btn btn-primary">Create Observation</button>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Your Observations ({{ observations|length }})</h2>
+    </div>
+    <div class="card-body">
+        {% if observations %}
+        <div class="observations-list">
+            {% for observation in observations %}
+            <div class="card mb-3">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="badge" style="background-color: #e74c3c; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">
+                            {{ observation.entity_type }}
+                        </span>
+                        <strong style="margin-left: 0.5rem;">{{ observation.entity_id }}</strong>
+                    </div>
+                    <form method="post" action="{{ mount_path }}/observations/{{ observation.id }}/delete" style="display: inline;">
+                        <button type="submit" class="btn btn-danger btn-sm" 
+                                onclick="return confirm('Are you sure you want to delete this observation?')">
+                            Delete
+                        </button>
+                    </form>
+                </div>
+                <div class="card-body">
+                    <p style="white-space: pre-wrap; margin-bottom: 1rem;">{{ observation.content }}</p>
+                    <div class="text-muted" style="font-size: 0.875rem;">
+                        {% if observation.user_id %}User: {{ observation.user_id }} • {% endif %}
+                        Created: {{ observation.created_at.strftime('%Y-%m-%d %H:%M') if observation.created_at else 'N/A' }}
+                        {% if observation.updated_at and observation.updated_at != observation.created_at %}
+                        • Updated: {{ observation.updated_at.strftime('%Y-%m-%d %H:%M') }}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-muted text-center">No observations found. Create your first observation above!</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
