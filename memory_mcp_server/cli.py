@@ -29,6 +29,22 @@ def cli(ctx: click.Context, config: Optional[Path], debug: bool) -> None:
     if debug:
         app_config.logging.level = "DEBUG"
 
+    # Initialize logging and error handling
+    try:
+        from .utils.logging import setup_logging
+
+        setup_logging(app_config.logging)
+    except ImportError:
+        # Fallback to basic logging
+        logging.basicConfig(
+            level=getattr(logging, app_config.logging.level),
+            format=app_config.logging.format,
+        )
+
+    logger = logging.getLogger(__name__)
+    logger.info(f"Memory MCP Server starting with config: {app_config.environment}")
+    logger.debug(f"Configuration loaded from: {config or 'defaults'}")
+
     ctx.obj["config"] = app_config
 
 

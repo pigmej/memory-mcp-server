@@ -21,7 +21,75 @@ from ..models.observation import Observation
 from ..services.memory_service import MemoryService, MemoryServiceError, NotFoundError
 from ..services.search_service import SearchService
 
-logger = logging.getLogger(__name__)
+
+# Import utilities locally to avoid circular imports
+def _get_utility_classes():
+    """Lazy import of utility classes to avoid circular dependencies."""
+    try:
+        from ..utils.errors import (
+            BaseMemoryError,
+            DatabaseError,
+            ProtocolError,
+            ValidationError,
+            create_error_context,
+        )
+        from ..utils.logging import get_logger
+        from ..utils.middleware import setup_middleware
+
+        return (
+            BaseMemoryError,
+            ProtocolError,
+            ValidationError,
+            DatabaseError,
+            create_error_context,
+            get_logger,
+            setup_middleware,
+        )
+    except ImportError:
+        # Fallback to basic classes if utils not available
+        class BaseMemoryError(Exception):
+            pass
+
+        class ProtocolError(BaseMemoryError):
+            pass
+
+        class ValidationError(BaseMemoryError):
+            pass
+
+        class DatabaseError(BaseMemoryError):
+            pass
+
+        def create_error_context(**kwargs):
+            return None
+
+        def get_logger(name):
+            return logging.getLogger(name)
+
+        def setup_middleware(app):
+            pass  # No-op fallback
+
+        return (
+            BaseMemoryError,
+            ProtocolError,
+            ValidationError,
+            DatabaseError,
+            create_error_context,
+            get_logger,
+            setup_middleware,
+        )
+
+
+(
+    BaseMemoryError,
+    ProtocolError,
+    ValidationError,
+    DatabaseError,
+    create_error_context,
+    get_logger,
+    setup_middleware,
+) = _get_utility_classes()
+
+logger = get_logger(__name__)
 
 
 # Request/Response models
@@ -108,6 +176,10 @@ class MemoryHTTPServer:
 
     def _setup_middleware(self) -> None:
         """Set up CORS and other middleware."""
+        # Setup error handling and logging middleware
+        setup_middleware(self.app)
+
+        # Add CORS middleware
         self.app.add_middleware(
             CORSMiddleware,
             allow_origins=self.config.server.cors_origins,
@@ -119,11 +191,78 @@ class MemoryHTTPServer:
     def _setup_routes(self) -> None:
         """Set up API routes."""
 
-        # Health check
+        # Health check endpoints
         @self.app.get("/health")
         async def health_check():
-            """Health check endpoint."""
+            """Basic health check endpoint."""
             return {"status": "healthy", "timestamp": datetime.utcnow()}
+
+        @self.app.get("/health/detailed")
+        async def detailed_health_check():
+            """Detailed health check with component status."""
+            from ..utils import get_health_checker
+
+            health_checker = get_health_checker()
+            component_health = health_checker.check_all_health()
+
+            # Add database connectivity check
+            try:
+                async with self.db_manager.get_async_session() as session:
+                    # Simple query to test database connectivity
+                    from sqlalchemy import text
+
+                    await session.execute(text("SELECT 1"))
+                    component_health["database"] = True
+            except Exception as e:
+                logger.error(f"Database health check failed: {e}")
+                component_health["database"] = False
+
+            # Add search service health check
+            try:
+                # Test embedding model loading
+                test_embedding = self.search_service.generate_embeddings("test")
+                component_health["search_service"] = len(test_embedding) > 0
+            except Exception as e:
+                logger.warning(f"Search service health check failed: {e}")
+                component_health["search_service"] = False
+
+            overall_status = "healthy" if all(component_health.values()) else "degraded"
+
+            return {
+                "status": overall_status,
+                "timestamp": datetime.utcnow(),
+                "components": component_health,
+            }
+
+        @self.app.get("/metrics")
+        async def get_metrics():
+            """Get system metrics and error statistics."""
+            from ..utils import get_error_handler
+
+            error_handler = get_error_handler()
+            error_stats = error_handler.get_error_stats()
+
+            # Get memory statistics
+            try:
+                async with self.db_manager.get_async_session() as session:
+                    stats = await self._get_memory_stats(session)
+            except Exception as e:
+                logger.error(f"Failed to get memory stats: {e}")
+                stats = {"error": "Failed to retrieve stats"}
+
+            return {
+                "timestamp": datetime.utcnow(),
+                "error_statistics": error_stats,
+                "memory_statistics": stats,
+                "system_info": {
+                    "config": {
+                        "embedding_model": self.search_service.model_name,
+                        "database_url": self.config.database.url.split("://")[0]
+                        + "://[REDACTED]",
+                        "log_level": self.config.logging.level,
+                    }
+                },
+            }
 
         # Alias endpoints
         @self.app.post("/aliases", response_model=Alias)

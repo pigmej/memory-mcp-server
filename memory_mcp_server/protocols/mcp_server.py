@@ -14,7 +14,37 @@ from ..models.observation import Observation
 from ..services.memory_service import MemoryService, MemoryServiceError
 from ..services.search_service import SearchService, SearchServiceError
 
-logger = logging.getLogger(__name__)
+
+# Import utilities locally to avoid circular imports
+def _get_utility_classes():
+    """Lazy import of utility classes to avoid circular dependencies."""
+    try:
+        from ..utils.errors import BaseMemoryError, ProtocolError, create_error_context
+        from ..utils.logging import get_logger
+
+        return BaseMemoryError, ProtocolError, create_error_context, get_logger
+    except ImportError:
+        # Fallback to basic classes if utils not available
+        class BaseMemoryError(Exception):
+            pass
+
+        class ProtocolError(BaseMemoryError):
+            pass
+
+        def create_error_context(**kwargs):
+            return None
+
+        def get_logger(name):
+            return logging.getLogger(name)
+
+        return BaseMemoryError, ProtocolError, create_error_context, get_logger
+
+
+BaseMemoryError, ProtocolError, create_error_context, get_logger = (
+    _get_utility_classes()
+)
+
+logger = get_logger(__name__)
 
 
 class MemoryMCPServer:

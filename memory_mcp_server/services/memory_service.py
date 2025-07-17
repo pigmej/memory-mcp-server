@@ -125,7 +125,9 @@ class MemoryService:
 
             # Index the alias for search
             try:
-                self.search_service.index_memory(session, result)
+                search_service = self._get_search_service()
+                if search_service:
+                    search_service.index_memory(session, result)
                 session.commit()
             except Exception as e:
                 logger.warning(f"Failed to index alias {result.id} for search: {e}")
@@ -161,7 +163,9 @@ class MemoryService:
 
             # Index the alias for search
             try:
-                await self.search_service.index_memory_async(session, result)
+                search_service = self._get_search_service()
+                if search_service:
+                    await search_service.index_memory_async(session, result)
                 await session.commit()
             except Exception as e:
                 logger.warning(f"Failed to index alias {result.id} for search: {e}")
@@ -247,7 +251,9 @@ class MemoryService:
 
             # Re-index the updated alias for search
             try:
-                self.search_service.index_memory(session, result)
+                search_service = self._get_search_service()
+                if search_service:
+                    search_service.index_memory(session, result)
                 session.commit()
             except Exception as e:
                 logger.warning(
@@ -679,7 +685,9 @@ class MemoryService:
 
             # Index the note for search
             try:
-                self.search_service.index_memory(session, result)
+                search_service = self._get_search_service()
+                if search_service:
+                    search_service.index_memory(session, result)
                 session.commit()
             except Exception as e:
                 logger.warning(f"Failed to index note {result.id} for search: {e}")
@@ -715,7 +723,9 @@ class MemoryService:
 
             # Index the note for search
             try:
-                await self.search_service.index_memory_async(session, result)
+                search_service = self._get_search_service()
+                if search_service:
+                    await search_service.index_memory_async(session, result)
                 await session.commit()
             except Exception as e:
                 logger.warning(f"Failed to index note {result.id} for search: {e}")
@@ -895,7 +905,9 @@ class MemoryService:
 
             # Index the observation for search
             try:
-                self.search_service.index_memory(session, result)
+                search_service = self._get_search_service()
+                if search_service:
+                    search_service.index_memory(session, result)
                 session.commit()
             except Exception as e:
                 logger.warning(
@@ -938,7 +950,9 @@ class MemoryService:
 
             # Index the observation for search
             try:
-                await self.search_service.index_memory_async(session, result)
+                search_service = self._get_search_service()
+                if search_service:
+                    await search_service.index_memory_async(session, result)
                 await session.commit()
             except Exception as e:
                 logger.warning(
@@ -1146,7 +1160,9 @@ class MemoryService:
 
             # Index the hint for search
             try:
-                self.search_service.index_memory(session, result)
+                search_service = self._get_search_service()
+                if search_service:
+                    search_service.index_memory(session, result)
                 session.commit()
             except Exception as e:
                 logger.warning(f"Failed to index hint {result.id} for search: {e}")
@@ -1183,7 +1199,9 @@ class MemoryService:
 
             # Index the hint for search
             try:
-                await self.search_service.index_memory_async(session, result)
+                search_service = self._get_search_service()
+                if search_service:
+                    await search_service.index_memory_async(session, result)
                 await session.commit()
             except Exception as e:
                 logger.warning(f"Failed to index hint {result.id} for search: {e}")
@@ -1372,15 +1390,21 @@ class MemoryService:
         """
         try:
             if search_type == "semantic":
-                return self.search_service.semantic_search(
+                search_service = self._get_search_service()
+            if search_service:
+                return search_service.semantic_search(
                     session, query, memory_types, user_id, limit, similarity_threshold
                 )
             elif search_type == "exact":
-                return self.search_service.exact_search(
+                search_service = self._get_search_service()
+            if search_service:
+                return search_service.exact_search(
                     session, query, memory_types, user_id, limit
                 )
             elif search_type == "combined":
-                return self.search_service.combined_search(
+                search_service = self._get_search_service()
+            if search_service:
+                return search_service.combined_search(
                     session,
                     query,
                     memory_types,
@@ -1424,15 +1448,21 @@ class MemoryService:
         """
         try:
             if search_type == "semantic":
-                return await self.search_service.semantic_search_async(
+                search_service = self._get_search_service()
+            if search_service:
+                return await search_service.semantic_search_async(
                     session, query, memory_types, user_id, limit, similarity_threshold
                 )
             elif search_type == "exact":
-                return await self.search_service.exact_search_async(
+                search_service = self._get_search_service()
+            if search_service:
+                return await search_service.exact_search_async(
                     session, query, memory_types, user_id, limit
                 )
             elif search_type == "combined":
-                return await self.search_service.combined_search_async(
+                search_service = self._get_search_service()
+            if search_service:
+                return await search_service.combined_search_async(
                     session,
                     query,
                     memory_types,
@@ -1770,7 +1800,10 @@ class MemoryService:
             Dictionary with counts of reindexed memories by type
         """
         try:
-            return self.search_service.reindex_all_memories(session)
+            search_service = self._get_search_service()
+            if search_service:
+                return search_service.reindex_all_memories(session)
+            return False
         except Exception as e:
             logger.error(f"Failed to reindex all memories: {e}")
             raise MemoryServiceError(f"Failed to reindex all memories: {e}") from None
@@ -1778,7 +1811,10 @@ class MemoryService:
     async def reindex_all_memories_async(self, session: AsyncSession) -> Dict[str, int]:
         """Reindex all memories for search functionality (async)."""
         try:
-            return await self.search_service.reindex_all_memories_async(session)
+            search_service = self._get_search_service()
+            if search_service:
+                return await search_service.reindex_all_memories_async(session)
+            return False
         except Exception as e:
             logger.error(f"Failed to reindex all memories: {e}")
             raise MemoryServiceError(f"Failed to reindex all memories: {e}") from None

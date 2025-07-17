@@ -19,16 +19,72 @@ from ..models.hint import Hint
 from ..models.note import Note
 from ..models.observation import Observation
 
-logger = logging.getLogger(__name__)
+
+# Import utilities locally to avoid circular imports
+def _get_utility_classes():
+    """Lazy import of utility classes to avoid circular dependencies."""
+    try:
+        from ..utils.errors import BaseMemoryError, SearchError
+        from ..utils.logging import get_logger
+        from ..utils.resilience import GracefulDegradation, with_graceful_degradation
+
+        return (
+            BaseMemoryError,
+            SearchError,
+            get_logger,
+            GracefulDegradation,
+            with_graceful_degradation,
+        )
+    except ImportError:
+        # Fallback to basic classes if utils not available
+        class BaseMemoryError(Exception):
+            pass
+
+        class SearchError(BaseMemoryError):
+            pass
+
+        def get_logger(name):
+            return logging.getLogger(name)
+
+        class GracefulDegradation:
+            @staticmethod
+            def fallback_embedding_generation(text):
+                return [0.0] * 12  # Simple fallback
+
+        def with_graceful_degradation(fallback_func=None):
+            def decorator(func):
+                return func
+
+            return decorator
+
+        return (
+            BaseMemoryError,
+            SearchError,
+            get_logger,
+            GracefulDegradation,
+            with_graceful_degradation,
+        )
 
 
-class SearchServiceError(Exception):
+(
+    BaseMemoryError,
+    SearchError,
+    get_logger,
+    GracefulDegradation,
+    with_graceful_degradation,
+) = _get_utility_classes()
+
+logger = get_logger(__name__)
+
+
+# Legacy exception classes for backward compatibility
+class SearchServiceError(BaseMemoryError):
     """Base exception for search service errors."""
 
     pass
 
 
-class EmbeddingError(SearchServiceError):
+class EmbeddingError(SearchError):
     """Exception raised for embedding generation errors."""
 
     pass
@@ -72,8 +128,9 @@ class SearchService:
         logger.info(f"Cache embeddings: {self.cache_embeddings}")
 
     @property
+    @with_graceful_degradation(fallback_func=lambda self: None)
     def model(self) -> SentenceTransformer:
-        """Lazy load the embedding model."""
+        """Lazy load the embedding model with graceful degradation."""
         if self._model is None:
             try:
                 logger.info(f"Loading embedding model: {self.model_name}")
@@ -81,13 +138,20 @@ class SearchService:
                 logger.info(f"Successfully loaded embedding model: {self.model_name}")
             except Exception as e:
                 logger.error(f"Failed to load embedding model {self.model_name}: {e}")
-                raise EmbeddingError(f"Failed to load embedding model: {e}") from None
+                # Instead of raising, return None to trigger fallback
+                return None
         return self._model
 
+    @with_graceful_degradation(
+        fallback_func=lambda self,
+        texts: GracefulDegradation.fallback_embedding_generation(
+            texts[0] if isinstance(texts, list) and texts else texts
+        )
+    )
     def generate_embeddings(
         self, texts: Union[str, List[str]]
     ) -> Union[np.ndarray, List[np.ndarray]]:
-        """Generate embeddings for text(s).
+        """Generate embeddings for text(s) with graceful degradation.
 
         Args:
             texts: Single text string or list of text strings
@@ -108,6 +172,22 @@ class SearchService:
                 logger.warning("No valid texts provided for embedding generation")
                 return np.array([]) if single_text else []
 
+            # Check if model is available
+            if self.model is None:
+                logger.warning("Embedding model not available, using fallback")
+                # Use fallback embedding generation
+                fallback_embeddings = [
+                    GracefulDegradation.fallback_embedding_generation(text)
+                    for text in valid_texts
+                ]
+                if single_text:
+                    return (
+                        np.array(fallback_embeddings[0])
+                        if fallback_embeddings
+                        else np.array([])
+                    )
+                return [np.array(emb) for emb in fallback_embeddings]
+
             logger.debug(f"Generating embeddings for {len(valid_texts)} texts")
             embeddings = self.model.encode(valid_texts, convert_to_numpy=True)
 
@@ -118,7 +198,18 @@ class SearchService:
 
         except Exception as e:
             logger.error(f"Failed to generate embeddings: {e}")
-            raise EmbeddingError(f"Failed to generate embeddings: {e}") from None
+            # Try fallback embedding generation
+            logger.info("Attempting fallback embedding generation")
+            if isinstance(texts, str):
+                return np.array(
+                    GracefulDegradation.fallback_embedding_generation(texts)
+                )
+            else:
+                return [
+                    np.array(GracefulDegradation.fallback_embedding_generation(text))
+                    for text in texts
+                    if text and text.strip()
+                ]
 
     def _serialize_embedding(self, embedding: np.ndarray) -> bytes:
         """Serialize embedding for database storage."""

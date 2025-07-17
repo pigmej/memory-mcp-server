@@ -113,6 +113,7 @@ class Config(BaseSettings):
         super().__init__(**kwargs)
         self._ensure_data_dir()
         self._update_database_path()
+        self._setup_logging()
 
     def _ensure_data_dir(self) -> None:
         """Ensure the data directory exists."""
@@ -125,6 +126,24 @@ class Config(BaseSettings):
         ):
             db_name = self.database.url.split("///")[-1]
             self.database.url = f"sqlite:///{self.data_dir / db_name}"
+
+    def _setup_logging(self) -> None:
+        """Setup logging configuration."""
+        try:
+            from .utils.logging import setup_logging
+
+            # Set log file path relative to data directory if not absolute
+            if self.logging.file_path and not os.path.isabs(self.logging.file_path):
+                self.logging.file_path = str(self.data_dir / self.logging.file_path)
+
+            setup_logging(self.logging)
+        except ImportError:
+            # Fallback to basic logging if utils not available
+            import logging
+
+            logging.basicConfig(
+                level=getattr(logging, self.logging.level), format=self.logging.format
+            )
 
     @classmethod
     def from_file(cls, config_path: Path) -> "Config":
