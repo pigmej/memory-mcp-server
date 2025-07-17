@@ -2,23 +2,22 @@
 
 import logging
 import pickle
-import numpy as np
-from typing import Any, Dict, List, Optional, Tuple, Union
-from datetime import datetime
+from typing import Any, Dict, List, Optional, Union
 
+import numpy as np
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
-from sqlalchemy.orm import Session
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import Session
 
-from ..models.base import BaseMemory
+from ..database.connection import get_database_manager
+from ..database.models import AliasDB, HintDB, NoteDB, ObservationDB
+from ..database.repositories import EmbeddingRepository
 from ..models.alias import Alias
+from ..models.base import BaseMemory
+from ..models.hint import Hint
 from ..models.note import Note
 from ..models.observation import Observation
-from ..models.hint import Hint
-from ..database.models import EmbeddingDB, AliasDB, NoteDB, ObservationDB, HintDB
-from ..database.repositories import EmbeddingRepository
-from ..database.connection import get_database_manager
 
 logger = logging.getLogger(__name__)
 
@@ -82,7 +81,7 @@ class SearchService:
                 logger.info(f"Successfully loaded embedding model: {self.model_name}")
             except Exception as e:
                 logger.error(f"Failed to load embedding model {self.model_name}: {e}")
-                raise EmbeddingError(f"Failed to load embedding model: {e}")
+                raise EmbeddingError(f"Failed to load embedding model: {e}") from None
         return self._model
 
     def generate_embeddings(
@@ -119,7 +118,7 @@ class SearchService:
 
         except Exception as e:
             logger.error(f"Failed to generate embeddings: {e}")
-            raise EmbeddingError(f"Failed to generate embeddings: {e}")
+            raise EmbeddingError(f"Failed to generate embeddings: {e}") from None
 
     def _serialize_embedding(self, embedding: np.ndarray) -> bytes:
         """Serialize embedding for database storage."""
@@ -127,7 +126,7 @@ class SearchService:
             return pickle.dumps(embedding)
         except Exception as e:
             logger.error(f"Failed to serialize embedding: {e}")
-            raise EmbeddingError(f"Failed to serialize embedding: {e}")
+            raise EmbeddingError(f"Failed to serialize embedding: {e}") from None
 
     def _deserialize_embedding(self, data: bytes) -> np.ndarray:
         """Deserialize embedding from database storage."""
@@ -135,7 +134,7 @@ class SearchService:
             return pickle.loads(data)
         except Exception as e:
             logger.error(f"Failed to deserialize embedding: {e}")
-            raise EmbeddingError(f"Failed to deserialize embedding: {e}")
+            raise EmbeddingError(f"Failed to deserialize embedding: {e}") from None
 
     def _extract_text_from_memory(self, memory: BaseMemory) -> str:
         """Extract searchable text from memory object."""
@@ -355,7 +354,7 @@ class SearchService:
                     # Get memory objects and filter by user if specified
                     memory_model = self.memory_type_models[memory_type]
 
-                    for i, (memory_id, similarity) in enumerate(
+                    for _i, (memory_id, similarity) in enumerate(
                         zip(memory_ids, similarities)
                     ):
                         if similarity < similarity_threshold:
@@ -407,7 +406,9 @@ class SearchService:
 
         except Exception as e:
             logger.error(f"Failed to perform semantic search: {e}")
-            raise SearchServiceError(f"Failed to perform semantic search: {e}")
+            raise SearchServiceError(
+                f"Failed to perform semantic search: {e}"
+            ) from None
 
     async def semantic_search_async(
         self,
@@ -502,7 +503,7 @@ class SearchService:
                     # Get memory objects and filter by user if specified
                     memory_model = self.memory_type_models[memory_type]
 
-                    for i, (memory_id, similarity) in enumerate(
+                    for _i, (memory_id, similarity) in enumerate(
                         zip(memory_ids, similarities)
                     ):
                         if similarity < similarity_threshold:
@@ -554,7 +555,9 @@ class SearchService:
 
         except Exception as e:
             logger.error(f"Failed to perform semantic search: {e}")
-            raise SearchServiceError(f"Failed to perform semantic search: {e}")
+            raise SearchServiceError(
+                f"Failed to perform semantic search: {e}"
+            ) from None
 
     def _extract_memory_content(
         self, memory_obj: Any, memory_type: str
@@ -636,7 +639,6 @@ class SearchService:
                 memory_types = ["alias", "note", "observation", "hint"]
 
             results = []
-            query_lower = query.lower()
 
             for memory_type in memory_types:
                 if memory_type not in self.memory_type_models:
@@ -702,7 +704,7 @@ class SearchService:
 
         except Exception as e:
             logger.error(f"Failed to perform exact search: {e}")
-            raise SearchServiceError(f"Failed to perform exact search: {e}")
+            raise SearchServiceError(f"Failed to perform exact search: {e}") from None
 
     async def exact_search_async(
         self,
@@ -734,7 +736,6 @@ class SearchService:
                 memory_types = ["alias", "note", "observation", "hint"]
 
             results = []
-            query_lower = query.lower()
 
             for memory_type in memory_types:
                 if memory_type not in self.memory_type_models:
@@ -742,7 +743,7 @@ class SearchService:
                     continue
 
                 try:
-                    from sqlalchemy import select, or_
+                    from sqlalchemy import or_, select
 
                     memory_model = self.memory_type_models[memory_type]
                     query_obj = select(memory_model)
@@ -807,7 +808,7 @@ class SearchService:
 
         except Exception as e:
             logger.error(f"Failed to perform exact search: {e}")
-            raise SearchServiceError(f"Failed to perform exact search: {e}")
+            raise SearchServiceError(f"Failed to perform exact search: {e}") from None
 
     def combined_search(
         self,
@@ -877,7 +878,9 @@ class SearchService:
 
         except Exception as e:
             logger.error(f"Failed to perform combined search: {e}")
-            raise SearchServiceError(f"Failed to perform combined search: {e}")
+            raise SearchServiceError(
+                f"Failed to perform combined search: {e}"
+            ) from None
 
     async def combined_search_async(
         self,
@@ -953,7 +956,9 @@ class SearchService:
 
         except Exception as e:
             logger.error(f"Failed to perform combined search: {e}")
-            raise SearchServiceError(f"Failed to perform combined search: {e}")
+            raise SearchServiceError(
+                f"Failed to perform combined search: {e}"
+            ) from None
 
     def reindex_all_memories(self, session: Session) -> Dict[str, int]:
         """Reindex all memories in the database.
@@ -1049,7 +1054,7 @@ class SearchService:
         except Exception as e:
             logger.error(f"Failed to reindex all memories: {e}")
             session.rollback()
-            raise SearchServiceError(f"Failed to reindex all memories: {e}")
+            raise SearchServiceError(f"Failed to reindex all memories: {e}") from None
 
     async def reindex_all_memories_async(self, session: AsyncSession) -> Dict[str, int]:
         """Reindex all memories in the database (async).
@@ -1149,4 +1154,4 @@ class SearchService:
         except Exception as e:
             logger.error(f"Failed to reindex all memories: {e}")
             await session.rollback()
-            raise SearchServiceError(f"Failed to reindex all memories: {e}")
+            raise SearchServiceError(f"Failed to reindex all memories: {e}") from None

@@ -2,7 +2,8 @@
 
 import os
 from pathlib import Path
-from typing import Optional, List, Dict, Any
+from typing import Any, Dict, List, Optional
+
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings
 
@@ -128,13 +129,14 @@ class Config(BaseSettings):
     @classmethod
     def from_file(cls, config_path: Path) -> "Config":
         """Load configuration from a YAML or JSON file."""
-        import yaml
         import json
+
+        import yaml
 
         if not config_path.exists():
             raise FileNotFoundError(f"Configuration file not found: {config_path}")
 
-        with open(config_path, "r", encoding="utf-8") as f:
+        with open(config_path, encoding="utf-8") as f:
             if config_path.suffix.lower() in [".yaml", ".yml"]:
                 data = yaml.safe_load(f)
             elif config_path.suffix.lower() == ".json":

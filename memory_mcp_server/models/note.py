@@ -1,7 +1,9 @@
 """Note model for storing arbitrary user notes."""
 
 from typing import Optional
+
 from pydantic import Field, field_validator
+
 from .base import BaseMemory
 
 

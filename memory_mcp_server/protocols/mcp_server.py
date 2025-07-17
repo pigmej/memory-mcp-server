@@ -1,18 +1,18 @@
 """MCP protocol implementation using FastMCP."""
 
 import logging
-from typing import Any, Dict, List, Optional, Union
 from datetime import datetime
+from typing import Any, Dict, List, Optional
 
 from fastmcp import FastMCP
 
-from ..services.memory_service import MemoryService, MemoryServiceError
-from ..services.search_service import SearchService, SearchServiceError
+from ..database.connection import get_database_manager
 from ..models.alias import Alias
+from ..models.hint import Hint
 from ..models.note import Note
 from ..models.observation import Observation
-from ..models.hint import Hint
-from ..database.connection import get_database_manager
+from ..services.memory_service import MemoryService, MemoryServiceError
+from ..services.search_service import SearchService, SearchServiceError
 
 logger = logging.getLogger(__name__)
 

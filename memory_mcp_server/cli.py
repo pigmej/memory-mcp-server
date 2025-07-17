@@ -1,12 +1,13 @@
 """Command-line interface for the Memory MCP Server."""
 
 import asyncio
-import sys
 import logging
+import sys
 from pathlib import Path
 from typing import Optional
 
 import click
+
 from .config import Config, load_config
 from .protocols.mcp_server import MemoryMCPServer
 

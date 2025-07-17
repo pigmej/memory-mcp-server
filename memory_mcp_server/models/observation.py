@@ -1,7 +1,9 @@
 """Observation model for storing contextual information about entities."""
 
 from typing import Any, Dict, Optional
+
 from pydantic import Field, field_validator
+
 from .base import BaseMemory
 
 

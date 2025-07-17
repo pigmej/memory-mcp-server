@@ -3,13 +3,12 @@
 import logging
 from typing import Optional
 
-from fastapi import FastAPI
 from starlette.applications import Starlette
 from starlette.routing import Mount
 
 from .config import Config
-from .protocols.mcp_server import MemoryMCPServer
 from .protocols.http_server import MemoryHTTPServer
+from .protocols.mcp_server import MemoryMCPServer
 from .web.server import WebUIServer
 
 logger = logging.getLogger(__name__)
@@ -61,6 +60,7 @@ class CombinedServer:
     ):
         """Start the combined server."""
         import uvicorn
+
         from .database.connection import get_database_manager
 
         # Initialize database

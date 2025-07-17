@@ -2,23 +2,22 @@
 
 import logging
 from pathlib import Path
-from typing import Optional, Dict, Any, List
+from typing import List, Optional
 
-from fastapi import FastAPI, Request, Form, HTTPException, Depends
+import uvicorn
+from fastapi import FastAPI, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-import uvicorn
 
 from ..config import Config
+from ..database.connection import get_database_manager
+from ..models.alias import Alias
+from ..models.hint import Hint
+from ..models.note import Note
+from ..models.observation import Observation
 from ..services.memory_service import MemoryService
 from ..services.search_service import SearchService
-from ..database.connection import get_database_manager
-from ..models.note import Note
-from ..models.alias import Alias
-from ..models.observation import Observation
-from ..models.hint import Hint
-
 
 logger = logging.getLogger(__name__)
 
@@ -203,7 +202,7 @@ class WebUIServer:
                         formatted_result["created_at"] = datetime.fromisoformat(
                             formatted_result["created_at"].replace("Z", "+00:00")
                         )
-                    except:
+                    except Exception:
                         pass  # Keep as string if parsing fails
 
                 formatted_results.append(formatted_result)
@@ -230,7 +229,6 @@ class WebUIServer:
     def _get_mount_path(self, request: Request) -> str:
         """Get the mount path from the request scope."""
         # Check if this app is mounted under a sub-path
-        path_info = request.scope.get("path_info", "")
         script_name = request.scope.get("root_path", "")
 
         # If we have a root_path, that's our mount path
@@ -270,7 +268,7 @@ class WebUIServer:
                 )
             except Exception as e:
                 logger.error(f"Dashboard error: {e}")
-                raise HTTPException(status_code=500, detail=str(e))
+                raise HTTPException(status_code=500, detail=str(e)) from None
 
         # Aliases routes
         @self.app.get("/aliases", response_class=HTMLResponse)
@@ -285,7 +283,7 @@ class WebUIServer:
                 )
             except Exception as e:
                 logger.error(f"Aliases page error: {e}")
-                raise HTTPException(status_code=500, detail=str(e))
+                raise HTTPException(status_code=500, detail=str(e)) from None
 
         @self.app.post("/aliases/create")
         async def create_alias_route(
@@ -308,7 +306,7 @@ class WebUIServer:
                 return RedirectResponse(url=f"{mount_path}/aliases", status_code=303)
             except Exception as e:
                 logger.error(f"Create alias error: {e}")
-                raise HTTPException(status_code=500, detail=str(e))
+                raise HTTPException(status_code=500, detail=str(e)) from None
 
         @self.app.post("/aliases/{alias_id}/delete")
         async def delete_alias_route(request: Request, alias_id: int):
@@ -319,7 +317,7 @@ class WebUIServer:
                 return RedirectResponse(url=f"{mount_path}/aliases", status_code=303)
             except Exception as e:
                 logger.error(f"Delete alias error: {e}")
-                raise HTTPException(status_code=500, detail=str(e))
+                raise HTTPException(status_code=500, detail=str(e)) from None
 
         # Notes routes
         @self.app.get("/notes", response_class=HTMLResponse)
@@ -334,7 +332,7 @@ class WebUIServer:
                 )
             except Exception as e:
                 logger.error(f"Notes page error: {e}")
-                raise HTTPException(status_code=500, detail=str(e))
+                raise HTTPException(status_code=500, detail=str(e)) from None
 
         @self.app.post("/notes/create")
         async def create_note_route(
@@ -354,7 +352,7 @@ class WebUIServer:
                 return RedirectResponse(url=f"{mount_path}/notes", status_code=303)
             except Exception as e:
                 logger.error(f"Create note error: {e}")
-                raise HTTPException(status_code=500, detail=str(e))
+                raise HTTPException(status_code=500, detail=str(e)) from None
 
         @self.app.post("/notes/{note_id}/delete")
         async def delete_note_route(request: Request, note_id: int):
@@ -365,7 +363,7 @@ class WebUIServer:
                 return RedirectResponse(url=f"{mount_path}/notes", status_code=303)
             except Exception as e:
                 logger.error(f"Delete note error: {e}")
-                raise HTTPException(status_code=500, detail=str(e))
+                raise HTTPException(status_code=500, detail=str(e)) from None
 
         # Observations routes
         @self.app.get("/observations", response_class=HTMLResponse)
@@ -384,7 +382,7 @@ class WebUIServer:
                 )
             except Exception as e:
                 logger.error(f"Observations page error: {e}")
-                raise HTTPException(status_code=500, detail=str(e))
+                raise HTTPException(status_code=500, detail=str(e)) from None
 
         @self.app.post("/observations/create")
         async def create_observation_route(
@@ -409,7 +407,7 @@ class WebUIServer:
                 )
             except Exception as e:
                 logger.error(f"Create observation error: {e}")
-                raise HTTPException(status_code=500, detail=str(e))
+                raise HTTPException(status_code=500, detail=str(e)) from None
 
         @self.app.post("/observations/{observation_id}/delete")
         async def delete_observation_route(request: Request, observation_id: int):
@@ -422,7 +420,7 @@ class WebUIServer:
                 )
             except Exception as e:
                 logger.error(f"Delete observation error: {e}")
-                raise HTTPException(status_code=500, detail=str(e))
+                raise HTTPException(status_code=500, detail=str(e)) from None
 
         # Hints routes
         @self.app.get("/hints", response_class=HTMLResponse)
@@ -437,7 +435,7 @@ class WebUIServer:
                 )
             except Exception as e:
                 logger.error(f"Hints page error: {e}")
-                raise HTTPException(status_code=500, detail=str(e))
+                raise HTTPException(status_code=500, detail=str(e)) from None
 
         @self.app.post("/hints/create")
         async def create_hint_route(
@@ -462,7 +460,7 @@ class WebUIServer:
                 return RedirectResponse(url=f"{mount_path}/hints", status_code=303)
             except Exception as e:
                 logger.error(f"Create hint error: {e}")
-                raise HTTPException(status_code=500, detail=str(e))
+                raise HTTPException(status_code=500, detail=str(e)) from None
 
         @self.app.post("/hints/{hint_id}/delete")
         async def delete_hint_route(request: Request, hint_id: int):
@@ -473,7 +471,7 @@ class WebUIServer:
                 return RedirectResponse(url=f"{mount_path}/hints", status_code=303)
             except Exception as e:
                 logger.error(f"Delete hint error: {e}")
-                raise HTTPException(status_code=500, detail=str(e))
+                raise HTTPException(status_code=500, detail=str(e)) from None
 
         # Search routes
         @self.app.get("/search", response_class=HTMLResponse)
@@ -522,6 +520,7 @@ class WebUIServer:
                     # Return CSV format
                     import csv
                     import io
+
                     from fastapi.responses import StreamingResponse
 
                     output = io.StringIO()
@@ -564,7 +563,6 @@ class WebUIServer:
                     )
                 else:
                     # Return JSON format (default)
-                    import json
                     from fastapi.responses import JSONResponse
 
                     return JSONResponse(
@@ -576,7 +574,7 @@ class WebUIServer:
 
             except Exception as e:
                 logger.error(f"Export search results error: {e}")
-                raise HTTPException(status_code=500, detail=str(e))
+                raise HTTPException(status_code=500, detail=str(e)) from None
 
     async def start_server(
         self, host: Optional[str] = None, port: Optional[int] = None

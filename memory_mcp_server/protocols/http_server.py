@@ -3,23 +3,23 @@
 import asyncio
 import json
 import logging
-from typing import Any, Dict, List, Optional, AsyncGenerator
 from datetime import datetime
+from typing import Any, AsyncGenerator, Dict, List, Optional
 
-from fastapi import FastAPI, HTTPException, Query, Body, Depends
+from fastapi import Depends, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse, JSONResponse
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..config import Config, get_config
 from ..database.connection import get_database_manager
-from ..services.memory_service import MemoryService, MemoryServiceError, NotFoundError
-from ..services.search_service import SearchService
 from ..models.alias import Alias
+from ..models.hint import Hint
 from ..models.note import Note
 from ..models.observation import Observation
-from ..models.hint import Hint
+from ..services.memory_service import MemoryService, MemoryServiceError, NotFoundError
+from ..services.search_service import SearchService
 
 logger = logging.getLogger(__name__)
 
@@ -145,10 +145,12 @@ class MemoryHTTPServer:
                 result = await self.memory_service.create_alias_async(session, alias)
                 return result
             except MemoryServiceError as e:
-                raise HTTPException(status_code=400, detail=str(e))
+                raise HTTPException(status_code=400, detail=str(e)) from None
             except Exception as e:
                 logger.error(f"Failed to create alias: {e}")
-                raise HTTPException(status_code=500, detail="Internal server error")
+                raise HTTPException(
+                    status_code=500, detail="Internal server error"
+                ) from None
 
         @self.app.get("/aliases", response_model=List[Alias])
         async def get_aliases(
@@ -165,10 +167,12 @@ class MemoryHTTPServer:
                 )
                 return aliases
             except MemoryServiceError as e:
-                raise HTTPException(status_code=400, detail=str(e))
+                raise HTTPException(status_code=400, detail=str(e)) from None
             except Exception as e:
                 logger.error(f"Failed to get aliases: {e}")
-                raise HTTPException(status_code=500, detail="Internal server error")
+                raise HTTPException(
+                    status_code=500, detail="Internal server error"
+                ) from None
 
         @self.app.get("/aliases/query/{query_term}")
         async def query_alias(
@@ -184,10 +188,12 @@ class MemoryHTTPServer:
                 )
                 return {"query": query_term, "results": results}
             except MemoryServiceError as e:
-                raise HTTPException(status_code=400, detail=str(e))
+                raise HTTPException(status_code=400, detail=str(e)) from None
             except Exception as e:
                 logger.error(f"Failed to query alias: {e}")
-                raise HTTPException(status_code=500, detail="Internal server error")
+                raise HTTPException(
+                    status_code=500, detail="Internal server error"
+                ) from None
 
         # Note endpoints
         @self.app.post("/notes", response_model=Note)
@@ -209,10 +215,12 @@ class MemoryHTTPServer:
                 result = await self.memory_service.create_note_async(session, note)
                 return result
             except MemoryServiceError as e:
-                raise HTTPException(status_code=400, detail=str(e))
+                raise HTTPException(status_code=400, detail=str(e)) from None
             except Exception as e:
                 logger.error(f"Failed to create note: {e}")
-                raise HTTPException(status_code=500, detail="Internal server error")
+                raise HTTPException(
+                    status_code=500, detail="Internal server error"
+                ) from None
 
         @self.app.get("/notes", response_model=List[Note])
         async def get_notes(
@@ -235,10 +243,12 @@ class MemoryHTTPServer:
                 )
                 return notes
             except MemoryServiceError as e:
-                raise HTTPException(status_code=400, detail=str(e))
+                raise HTTPException(status_code=400, detail=str(e)) from None
             except Exception as e:
                 logger.error(f"Failed to get notes: {e}")
-                raise HTTPException(status_code=500, detail="Internal server error")
+                raise HTTPException(
+                    status_code=500, detail="Internal server error"
+                ) from None
 
         # Observation endpoints
         @self.app.post("/observations", response_model=Observation)
@@ -263,10 +273,12 @@ class MemoryHTTPServer:
                 )
                 return result
             except MemoryServiceError as e:
-                raise HTTPException(status_code=400, detail=str(e))
+                raise HTTPException(status_code=400, detail=str(e)) from None
             except Exception as e:
                 logger.error(f"Failed to create observation: {e}")
-                raise HTTPException(status_code=500, detail="Internal server error")
+                raise HTTPException(
+                    status_code=500, detail="Internal server error"
+                ) from None
 
         @self.app.get("/observations", response_model=List[Observation])
         async def get_observations(
@@ -289,10 +301,12 @@ class MemoryHTTPServer:
                 )
                 return observations
             except MemoryServiceError as e:
-                raise HTTPException(status_code=400, detail=str(e))
+                raise HTTPException(status_code=400, detail=str(e)) from None
             except Exception as e:
                 logger.error(f"Failed to get observations: {e}")
-                raise HTTPException(status_code=500, detail="Internal server error")
+                raise HTTPException(
+                    status_code=500, detail="Internal server error"
+                ) from None
 
         # Hint endpoints
         @self.app.post("/hints", response_model=Hint)
@@ -315,10 +329,12 @@ class MemoryHTTPServer:
                 result = await self.memory_service.create_hint_async(session, hint)
                 return result
             except MemoryServiceError as e:
-                raise HTTPException(status_code=400, detail=str(e))
+                raise HTTPException(status_code=400, detail=str(e)) from None
             except Exception as e:
                 logger.error(f"Failed to create hint: {e}")
-                raise HTTPException(status_code=500, detail="Internal server error")
+                raise HTTPException(
+                    status_code=500, detail="Internal server error"
+                ) from None
 
         @self.app.get("/hints", response_model=List[Hint])
         async def get_hints(
@@ -341,10 +357,12 @@ class MemoryHTTPServer:
                 )
                 return hints
             except MemoryServiceError as e:
-                raise HTTPException(status_code=400, detail=str(e))
+                raise HTTPException(status_code=400, detail=str(e)) from None
             except Exception as e:
                 logger.error(f"Failed to get hints: {e}")
-                raise HTTPException(status_code=500, detail="Internal server error")
+                raise HTTPException(
+                    status_code=500, detail="Internal server error"
+                ) from None
 
         # Search endpoints
         @self.app.post("/search")
@@ -373,7 +391,9 @@ class MemoryHTTPServer:
                 return {"query": request.query, "results": results}
             except Exception as e:
                 logger.error(f"Failed to search memories: {e}")
-                raise HTTPException(status_code=500, detail="Internal server error")
+                raise HTTPException(
+                    status_code=500, detail="Internal server error"
+                ) from None
 
         @self.app.post("/search/stream")
         async def search_memories_stream(
@@ -388,7 +408,9 @@ class MemoryHTTPServer:
                 )
             except Exception as e:
                 logger.error(f"Failed to stream search results: {e}")
-                raise HTTPException(status_code=500, detail="Internal server error")
+                raise HTTPException(
+                    status_code=500, detail="Internal server error"
+                ) from None
 
         # Update/Delete endpoints for all memory types
         @self.app.put("/aliases/{alias_id}", response_model=Alias)
@@ -411,12 +433,14 @@ class MemoryHTTPServer:
                     raise HTTPException(status_code=404, detail="Alias not found")
                 return result
             except NotFoundError:
-                raise HTTPException(status_code=404, detail="Alias not found")
+                raise HTTPException(status_code=404, detail="Alias not found") from None
             except MemoryServiceError as e:
-                raise HTTPException(status_code=400, detail=str(e))
+                raise HTTPException(status_code=400, detail=str(e)) from None
             except Exception as e:
                 logger.error(f"Failed to update alias: {e}")
-                raise HTTPException(status_code=500, detail="Internal server error")
+                raise HTTPException(
+                    status_code=500, detail="Internal server error"
+                ) from None
 
         @self.app.delete("/aliases/{alias_id}")
         async def delete_alias(
@@ -431,12 +455,14 @@ class MemoryHTTPServer:
                     raise HTTPException(status_code=404, detail="Alias not found")
                 return {"message": "Alias deleted successfully"}
             except NotFoundError:
-                raise HTTPException(status_code=404, detail="Alias not found")
+                raise HTTPException(status_code=404, detail="Alias not found") from None
             except MemoryServiceError as e:
-                raise HTTPException(status_code=400, detail=str(e))
+                raise HTTPException(status_code=400, detail=str(e)) from None
             except Exception as e:
                 logger.error(f"Failed to delete alias: {e}")
-                raise HTTPException(status_code=500, detail="Internal server error")
+                raise HTTPException(
+                    status_code=500, detail="Internal server error"
+                ) from None
 
         @self.app.put("/notes/{note_id}", response_model=Note)
         async def update_note(
@@ -458,12 +484,14 @@ class MemoryHTTPServer:
                     raise HTTPException(status_code=404, detail="Note not found")
                 return result
             except NotFoundError:
-                raise HTTPException(status_code=404, detail="Note not found")
+                raise HTTPException(status_code=404, detail="Note not found") from None
             except MemoryServiceError as e:
-                raise HTTPException(status_code=400, detail=str(e))
+                raise HTTPException(status_code=400, detail=str(e)) from None
             except Exception as e:
                 logger.error(f"Failed to update note: {e}")
-                raise HTTPException(status_code=500, detail="Internal server error")
+                raise HTTPException(
+                    status_code=500, detail="Internal server error"
+                ) from None
 
         @self.app.delete("/notes/{note_id}")
         async def delete_note(
@@ -476,12 +504,14 @@ class MemoryHTTPServer:
                     raise HTTPException(status_code=404, detail="Note not found")
                 return {"message": "Note deleted successfully"}
             except NotFoundError:
-                raise HTTPException(status_code=404, detail="Note not found")
+                raise HTTPException(status_code=404, detail="Note not found") from None
             except MemoryServiceError as e:
-                raise HTTPException(status_code=400, detail=str(e))
+                raise HTTPException(status_code=400, detail=str(e)) from None
             except Exception as e:
                 logger.error(f"Failed to delete note: {e}")
-                raise HTTPException(status_code=500, detail="Internal server error")
+                raise HTTPException(
+                    status_code=500, detail="Internal server error"
+                ) from None
 
         @self.app.put("/observations/{observation_id}", response_model=Observation)
         async def update_observation(
@@ -504,12 +534,16 @@ class MemoryHTTPServer:
                     raise HTTPException(status_code=404, detail="Observation not found")
                 return result
             except NotFoundError:
-                raise HTTPException(status_code=404, detail="Observation not found")
+                raise HTTPException(
+                    status_code=404, detail="Observation not found"
+                ) from None
             except MemoryServiceError as e:
-                raise HTTPException(status_code=400, detail=str(e))
+                raise HTTPException(status_code=400, detail=str(e)) from None
             except Exception as e:
                 logger.error(f"Failed to update observation: {e}")
-                raise HTTPException(status_code=500, detail="Internal server error")
+                raise HTTPException(
+                    status_code=500, detail="Internal server error"
+                ) from None
 
         @self.app.delete("/observations/{observation_id}")
         async def delete_observation(
@@ -524,12 +558,16 @@ class MemoryHTTPServer:
                     raise HTTPException(status_code=404, detail="Observation not found")
                 return {"message": "Observation deleted successfully"}
             except NotFoundError:
-                raise HTTPException(status_code=404, detail="Observation not found")
+                raise HTTPException(
+                    status_code=404, detail="Observation not found"
+                ) from None
             except MemoryServiceError as e:
-                raise HTTPException(status_code=400, detail=str(e))
+                raise HTTPException(status_code=400, detail=str(e)) from None
             except Exception as e:
                 logger.error(f"Failed to delete observation: {e}")
-                raise HTTPException(status_code=500, detail="Internal server error")
+                raise HTTPException(
+                    status_code=500, detail="Internal server error"
+                ) from None
 
         @self.app.put("/hints/{hint_id}", response_model=Hint)
         async def update_hint(
@@ -552,12 +590,14 @@ class MemoryHTTPServer:
                     raise HTTPException(status_code=404, detail="Hint not found")
                 return result
             except NotFoundError:
-                raise HTTPException(status_code=404, detail="Hint not found")
+                raise HTTPException(status_code=404, detail="Hint not found") from None
             except MemoryServiceError as e:
-                raise HTTPException(status_code=400, detail=str(e))
+                raise HTTPException(status_code=400, detail=str(e)) from None
             except Exception as e:
                 logger.error(f"Failed to update hint: {e}")
-                raise HTTPException(status_code=500, detail="Internal server error")
+                raise HTTPException(
+                    status_code=500, detail="Internal server error"
+                ) from None
 
         @self.app.delete("/hints/{hint_id}")
         async def delete_hint(
@@ -570,12 +610,14 @@ class MemoryHTTPServer:
                     raise HTTPException(status_code=404, detail="Hint not found")
                 return {"message": "Hint deleted successfully"}
             except NotFoundError:
-                raise HTTPException(status_code=404, detail="Hint not found")
+                raise HTTPException(status_code=404, detail="Hint not found") from None
             except MemoryServiceError as e:
-                raise HTTPException(status_code=400, detail=str(e))
+                raise HTTPException(status_code=400, detail=str(e)) from None
             except Exception as e:
                 logger.error(f"Failed to delete hint: {e}")
-                raise HTTPException(status_code=500, detail="Internal server error")
+                raise HTTPException(
+                    status_code=500, detail="Internal server error"
+                ) from None
 
         # Bulk operations endpoints
         @self.app.post("/memories/search/stream")
@@ -591,7 +633,9 @@ class MemoryHTTPServer:
                 )
             except Exception as e:
                 logger.error(f"Failed to stream unified search results: {e}")
-                raise HTTPException(status_code=500, detail="Internal server error")
+                raise HTTPException(
+                    status_code=500, detail="Internal server error"
+                ) from None
 
         @self.app.get("/memories/stats")
         async def get_memory_stats(
@@ -604,7 +648,9 @@ class MemoryHTTPServer:
                 return stats
             except Exception as e:
                 logger.error(f"Failed to get memory stats: {e}")
-                raise HTTPException(status_code=500, detail="Internal server error")
+                raise HTTPException(
+                    status_code=500, detail="Internal server error"
+                ) from None
 
         # User management endpoints
         @self.app.get("/users")
@@ -614,10 +660,12 @@ class MemoryHTTPServer:
                 users = await self.memory_service.get_users_async(session)
                 return {"users": users}
             except MemoryServiceError as e:
-                raise HTTPException(status_code=400, detail=str(e))
+                raise HTTPException(status_code=400, detail=str(e)) from None
             except Exception as e:
                 logger.error(f"Failed to get users: {e}")
-                raise HTTPException(status_code=500, detail="Internal server error")
+                raise HTTPException(
+                    status_code=500, detail="Internal server error"
+                ) from None
 
         @self.app.get("/users/{user_id}/stats")
         async def get_user_stats(
@@ -629,7 +677,9 @@ class MemoryHTTPServer:
                 return {"user_id": user_id, "stats": stats}
             except Exception as e:
                 logger.error(f"Failed to get user stats: {e}")
-                raise HTTPException(status_code=500, detail="Internal server error")
+                raise HTTPException(
+                    status_code=500, detail="Internal server error"
+                ) from None
 
     async def _get_db_session(self):
         """Get database session dependency."""

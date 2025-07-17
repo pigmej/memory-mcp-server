@@ -1,16 +1,16 @@
 """Repository pattern implementation for data access layer."""
 
 import logging
-from abc import ABC, abstractmethod
+from abc import ABC
 from datetime import datetime
-from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
+from typing import Any, Dict, Generic, List, Optional, Type, TypeVar
 
-from sqlalchemy import and_, desc, func, or_, text
+from sqlalchemy import and_, desc, func, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import Select
 
-from .models import Base, User, AliasDB, NoteDB, ObservationDB, HintDB, EmbeddingDB
+from .models import AliasDB, Base, EmbeddingDB, HintDB, NoteDB, ObservationDB, User
 
 logger = logging.getLogger(__name__)
 
@@ -680,7 +680,7 @@ class EmbeddingRepository(BaseRepository[EmbeddingDB]):
 
     async def delete_all_async(self, session: AsyncSession) -> int:
         """Delete all embeddings and return count of deleted records asynchronously."""
-        from sqlalchemy import select, delete
+        from sqlalchemy import delete, select
 
         # Count existing records
         count_query = select(func.count(EmbeddingDB.id))

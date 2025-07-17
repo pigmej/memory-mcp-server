@@ -1,7 +1,9 @@
 """Alias model for bidirectional term mappings."""
 
 from typing import Optional
+
 from pydantic import Field, field_validator
+
 from .base import BaseMemory
 
 

@@ -1,9 +1,10 @@
 """Base Pydantic models for the Memory MCP Server."""
 
 from datetime import datetime
-from typing import Any, Dict, List, Optional
-from pydantic import BaseModel, Field, field_validator, ConfigDict
 from enum import Enum
+from typing import List, Optional
+
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class MemoryType(str, Enum):

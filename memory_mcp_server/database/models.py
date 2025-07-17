@@ -1,7 +1,7 @@
 """SQLAlchemy database models for the Memory MCP Server."""
 
-from datetime import datetime
 import json
+from datetime import datetime
 
 from sqlalchemy import (
     Boolean,
@@ -9,14 +9,12 @@ from sqlalchemy import (
     DateTime,
     ForeignKey,
     Integer,
+    LargeBinary,
     String,
     Text,
-    LargeBinary,
 )
-from sqlalchemy.orm import declarative_base
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy.types import TypeDecorator
-
 
 Base = declarative_base()
 

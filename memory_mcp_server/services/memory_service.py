@@ -2,25 +2,25 @@
 
 import logging
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
-from sqlalchemy.orm import Session
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import Session
 
-from ..models.base import BaseMemory
-from ..models.alias import Alias
-from ..models.note import Note
-from ..models.observation import Observation
-from ..models.hint import Hint
-from ..database.models import User, AliasDB, NoteDB, ObservationDB, HintDB
+from ..database.connection import get_database_manager
+from ..database.models import AliasDB, HintDB, NoteDB, ObservationDB, User
 from ..database.repositories import (
-    UserRepository,
     AliasRepository,
+    HintRepository,
     NoteRepository,
     ObservationRepository,
-    HintRepository,
+    UserRepository,
 )
-from ..database.connection import get_database_manager
+from ..models.alias import Alias
+from ..models.base import BaseMemory
+from ..models.hint import Hint
+from ..models.note import Note
+from ..models.observation import Observation
 from .search_service import SearchService
 
 logger = logging.getLogger(__name__)
@@ -67,7 +67,7 @@ class MemoryService:
             return self.user_repo.get_or_create(session, user_id)
         except Exception as e:
             logger.error(f"Failed to ensure user {user_id}: {e}")
-            raise MemoryServiceError(f"Failed to ensure user: {e}")
+            raise MemoryServiceError(f"Failed to ensure user: {e}") from None
 
     async def ensure_user_async(
         self, session: AsyncSession, user_id: Optional[str]
@@ -80,7 +80,7 @@ class MemoryService:
             return await self.user_repo.get_or_create_async(session, user_id)
         except Exception as e:
             logger.error(f"Failed to ensure user {user_id}: {e}")
-            raise MemoryServiceError(f"Failed to ensure user: {e}")
+            raise MemoryServiceError(f"Failed to ensure user: {e}") from None
 
     def get_users(self, session: Session) -> List[str]:
         """Get all user IDs."""
@@ -89,7 +89,7 @@ class MemoryService:
             return [user.id for user in users]
         except Exception as e:
             logger.error(f"Failed to get users: {e}")
-            raise MemoryServiceError(f"Failed to get users: {e}")
+            raise MemoryServiceError(f"Failed to get users: {e}") from None
 
     async def get_users_async(self, session: AsyncSession) -> List[str]:
         """Get all user IDs (async)."""
@@ -98,7 +98,7 @@ class MemoryService:
             return [user.id for user in users]
         except Exception as e:
             logger.error(f"Failed to get users: {e}")
-            raise MemoryServiceError(f"Failed to get users: {e}")
+            raise MemoryServiceError(f"Failed to get users: {e}") from None
 
     # Alias methods
     def create_alias(self, session: Session, alias: Alias) -> Alias:
@@ -135,7 +135,7 @@ class MemoryService:
 
         except Exception as e:
             logger.error(f"Failed to create alias: {e}")
-            raise MemoryServiceError(f"Failed to create alias: {e}")
+            raise MemoryServiceError(f"Failed to create alias: {e}") from None
 
     async def create_alias_async(self, session: AsyncSession, alias: Alias) -> Alias:
         """Create a new alias (async)."""
@@ -171,7 +171,7 @@ class MemoryService:
 
         except Exception as e:
             logger.error(f"Failed to create alias: {e}")
-            raise MemoryServiceError(f"Failed to create alias: {e}")
+            raise MemoryServiceError(f"Failed to create alias: {e}") from None
 
     def get_aliases(
         self,
@@ -198,7 +198,7 @@ class MemoryService:
 
         except Exception as e:
             logger.error(f"Failed to get aliases: {e}")
-            raise MemoryServiceError(f"Failed to get aliases: {e}")
+            raise MemoryServiceError(f"Failed to get aliases: {e}") from None
 
     async def get_aliases_async(
         self,
@@ -229,7 +229,7 @@ class MemoryService:
 
         except Exception as e:
             logger.error(f"Failed to get aliases: {e}")
-            raise MemoryServiceError(f"Failed to get aliases: {e}")
+            raise MemoryServiceError(f"Failed to get aliases: {e}") from None
 
     def update_alias(
         self, session: Session, alias_id: int, **kwargs
@@ -261,7 +261,7 @@ class MemoryService:
             raise
         except Exception as e:
             logger.error(f"Failed to update alias {alias_id}: {e}")
-            raise MemoryServiceError(f"Failed to update alias: {e}")
+            raise MemoryServiceError(f"Failed to update alias: {e}") from None
 
     async def update_alias_async(
         self, session: AsyncSession, alias_id: int, **kwargs
@@ -283,7 +283,7 @@ class MemoryService:
             raise
         except Exception as e:
             logger.error(f"Failed to update alias {alias_id}: {e}")
-            raise MemoryServiceError(f"Failed to update alias: {e}")
+            raise MemoryServiceError(f"Failed to update alias: {e}") from None
 
     def delete_alias(self, session: Session, alias_id: int) -> bool:
         """Delete an alias."""
@@ -299,7 +299,7 @@ class MemoryService:
             raise
         except Exception as e:
             logger.error(f"Failed to delete alias {alias_id}: {e}")
-            raise MemoryServiceError(f"Failed to delete alias: {e}")
+            raise MemoryServiceError(f"Failed to delete alias: {e}") from None
 
     async def delete_alias_async(self, session: AsyncSession, alias_id: int) -> bool:
         """Delete an alias (async)."""
@@ -315,7 +315,7 @@ class MemoryService:
             raise
         except Exception as e:
             logger.error(f"Failed to delete alias {alias_id}: {e}")
-            raise MemoryServiceError(f"Failed to delete alias: {e}")
+            raise MemoryServiceError(f"Failed to delete alias: {e}") from None
 
     # Bidirectional alias functionality
     def query_alias(
@@ -389,7 +389,7 @@ class MemoryService:
 
         except Exception as e:
             logger.error(f"Failed to query alias '{query}': {e}")
-            raise MemoryServiceError(f"Failed to query alias: {e}")
+            raise MemoryServiceError(f"Failed to query alias: {e}") from None
 
     async def query_alias_async(
         self,
@@ -466,7 +466,7 @@ class MemoryService:
 
         except Exception as e:
             logger.error(f"Failed to query alias '{query}': {e}")
-            raise MemoryServiceError(f"Failed to query alias: {e}")
+            raise MemoryServiceError(f"Failed to query alias: {e}") from None
 
     def get_word_aliases(
         self,
@@ -485,7 +485,7 @@ class MemoryService:
 
         except Exception as e:
             logger.error(f"Failed to get word aliases: {e}")
-            raise MemoryServiceError(f"Failed to get word aliases: {e}")
+            raise MemoryServiceError(f"Failed to get word aliases: {e}") from None
 
     async def get_word_aliases_async(
         self,
@@ -504,7 +504,7 @@ class MemoryService:
 
         except Exception as e:
             logger.error(f"Failed to get word aliases: {e}")
-            raise MemoryServiceError(f"Failed to get word aliases: {e}")
+            raise MemoryServiceError(f"Failed to get word aliases: {e}") from None
 
     def get_phrase_aliases(
         self,
@@ -523,7 +523,7 @@ class MemoryService:
 
         except Exception as e:
             logger.error(f"Failed to get phrase aliases: {e}")
-            raise MemoryServiceError(f"Failed to get phrase aliases: {e}")
+            raise MemoryServiceError(f"Failed to get phrase aliases: {e}") from None
 
     async def get_phrase_aliases_async(
         self,
@@ -542,7 +542,7 @@ class MemoryService:
 
         except Exception as e:
             logger.error(f"Failed to get phrase aliases: {e}")
-            raise MemoryServiceError(f"Failed to get phrase aliases: {e}")
+            raise MemoryServiceError(f"Failed to get phrase aliases: {e}") from None
 
     def find_alias_mappings(
         self, session: Session, text: str, user_id: Optional[str] = None
@@ -597,7 +597,7 @@ class MemoryService:
 
         except Exception as e:
             logger.error(f"Failed to find alias mappings: {e}")
-            raise MemoryServiceError(f"Failed to find alias mappings: {e}")
+            raise MemoryServiceError(f"Failed to find alias mappings: {e}") from None
 
     async def find_alias_mappings_async(
         self, session: AsyncSession, text: str, user_id: Optional[str] = None
@@ -652,7 +652,7 @@ class MemoryService:
 
         except Exception as e:
             logger.error(f"Failed to find alias mappings: {e}")
-            raise MemoryServiceError(f"Failed to find alias mappings: {e}")
+            raise MemoryServiceError(f"Failed to find alias mappings: {e}") from None
 
     # Note methods
     def create_note(self, session: Session, note: Note) -> Note:
@@ -689,7 +689,7 @@ class MemoryService:
 
         except Exception as e:
             logger.error(f"Failed to create note: {e}")
-            raise MemoryServiceError(f"Failed to create note: {e}")
+            raise MemoryServiceError(f"Failed to create note: {e}") from None
 
     async def create_note_async(self, session: AsyncSession, note: Note) -> Note:
         """Create a new note (async)."""
@@ -725,7 +725,7 @@ class MemoryService:
 
         except Exception as e:
             logger.error(f"Failed to create note: {e}")
-            raise MemoryServiceError(f"Failed to create note: {e}")
+            raise MemoryServiceError(f"Failed to create note: {e}") from None
 
     def get_notes(
         self,
@@ -757,7 +757,7 @@ class MemoryService:
 
         except Exception as e:
             logger.error(f"Failed to get notes: {e}")
-            raise MemoryServiceError(f"Failed to get notes: {e}")
+            raise MemoryServiceError(f"Failed to get notes: {e}") from None
 
     async def get_notes_async(
         self,
@@ -791,7 +791,7 @@ class MemoryService:
 
         except Exception as e:
             logger.error(f"Failed to get notes: {e}")
-            raise MemoryServiceError(f"Failed to get notes: {e}")
+            raise MemoryServiceError(f"Failed to get notes: {e}") from None
 
     def update_note(self, session: Session, note_id: int, **kwargs) -> Optional[Note]:
         """Update a note."""
@@ -811,7 +811,7 @@ class MemoryService:
             raise
         except Exception as e:
             logger.error(f"Failed to update note {note_id}: {e}")
-            raise MemoryServiceError(f"Failed to update note: {e}")
+            raise MemoryServiceError(f"Failed to update note: {e}") from None
 
     async def update_note_async(
         self, session: AsyncSession, note_id: int, **kwargs
@@ -833,7 +833,7 @@ class MemoryService:
             raise
         except Exception as e:
             logger.error(f"Failed to update note {note_id}: {e}")
-            raise MemoryServiceError(f"Failed to update note: {e}")
+            raise MemoryServiceError(f"Failed to update note: {e}") from None
 
     def delete_note(self, session: Session, note_id: int) -> bool:
         """Delete a note."""
@@ -849,7 +849,7 @@ class MemoryService:
             raise
         except Exception as e:
             logger.error(f"Failed to delete note {note_id}: {e}")
-            raise MemoryServiceError(f"Failed to delete note: {e}")
+            raise MemoryServiceError(f"Failed to delete note: {e}") from None
 
     async def delete_note_async(self, session: AsyncSession, note_id: int) -> bool:
         """Delete a note (async)."""
@@ -865,7 +865,7 @@ class MemoryService:
             raise
         except Exception as e:
             logger.error(f"Failed to delete note {note_id}: {e}")
-            raise MemoryServiceError(f"Failed to delete note: {e}")
+            raise MemoryServiceError(f"Failed to delete note: {e}") from None
 
     # Observation methods
     def create_observation(
@@ -909,7 +909,7 @@ class MemoryService:
 
         except Exception as e:
             logger.error(f"Failed to create observation: {e}")
-            raise MemoryServiceError(f"Failed to create observation: {e}")
+            raise MemoryServiceError(f"Failed to create observation: {e}") from None
 
     async def create_observation_async(
         self, session: AsyncSession, observation: Observation
@@ -952,7 +952,7 @@ class MemoryService:
 
         except Exception as e:
             logger.error(f"Failed to create observation: {e}")
-            raise MemoryServiceError(f"Failed to create observation: {e}")
+            raise MemoryServiceError(f"Failed to create observation: {e}") from None
 
     def get_observations(
         self,
@@ -994,7 +994,7 @@ class MemoryService:
 
         except Exception as e:
             logger.error(f"Failed to get observations: {e}")
-            raise MemoryServiceError(f"Failed to get observations: {e}")
+            raise MemoryServiceError(f"Failed to get observations: {e}") from None
 
     async def get_observations_async(
         self,
@@ -1036,7 +1036,7 @@ class MemoryService:
 
         except Exception as e:
             logger.error(f"Failed to get observations: {e}")
-            raise MemoryServiceError(f"Failed to get observations: {e}")
+            raise MemoryServiceError(f"Failed to get observations: {e}") from None
 
     def update_observation(
         self, session: Session, observation_id: int, **kwargs
@@ -1060,7 +1060,7 @@ class MemoryService:
             raise
         except Exception as e:
             logger.error(f"Failed to update observation {observation_id}: {e}")
-            raise MemoryServiceError(f"Failed to update observation: {e}")
+            raise MemoryServiceError(f"Failed to update observation: {e}") from None
 
     async def update_observation_async(
         self, session: AsyncSession, observation_id: int, **kwargs
@@ -1084,7 +1084,7 @@ class MemoryService:
             raise
         except Exception as e:
             logger.error(f"Failed to update observation {observation_id}: {e}")
-            raise MemoryServiceError(f"Failed to update observation: {e}")
+            raise MemoryServiceError(f"Failed to update observation: {e}") from None
 
     def delete_observation(self, session: Session, observation_id: int) -> bool:
         """Delete an observation."""
@@ -1100,7 +1100,7 @@ class MemoryService:
             raise
         except Exception as e:
             logger.error(f"Failed to delete observation {observation_id}: {e}")
-            raise MemoryServiceError(f"Failed to delete observation: {e}")
+            raise MemoryServiceError(f"Failed to delete observation: {e}") from None
 
     async def delete_observation_async(
         self, session: AsyncSession, observation_id: int
@@ -1118,7 +1118,7 @@ class MemoryService:
             raise
         except Exception as e:
             logger.error(f"Failed to delete observation {observation_id}: {e}")
-            raise MemoryServiceError(f"Failed to delete observation: {e}")
+            raise MemoryServiceError(f"Failed to delete observation: {e}") from None
 
     # Hint methods
     def create_hint(self, session: Session, hint: Hint) -> Hint:
@@ -1156,7 +1156,7 @@ class MemoryService:
 
         except Exception as e:
             logger.error(f"Failed to create hint: {e}")
-            raise MemoryServiceError(f"Failed to create hint: {e}")
+            raise MemoryServiceError(f"Failed to create hint: {e}") from None
 
     async def create_hint_async(self, session: AsyncSession, hint: Hint) -> Hint:
         """Create a new hint (async)."""
@@ -1193,7 +1193,7 @@ class MemoryService:
 
         except Exception as e:
             logger.error(f"Failed to create hint: {e}")
-            raise MemoryServiceError(f"Failed to create hint: {e}")
+            raise MemoryServiceError(f"Failed to create hint: {e}") from None
 
     def get_hints(
         self,
@@ -1230,7 +1230,7 @@ class MemoryService:
 
         except Exception as e:
             logger.error(f"Failed to get hints: {e}")
-            raise MemoryServiceError(f"Failed to get hints: {e}")
+            raise MemoryServiceError(f"Failed to get hints: {e}") from None
 
     async def get_hints_async(
         self,
@@ -1269,7 +1269,7 @@ class MemoryService:
 
         except Exception as e:
             logger.error(f"Failed to get hints: {e}")
-            raise MemoryServiceError(f"Failed to get hints: {e}")
+            raise MemoryServiceError(f"Failed to get hints: {e}") from None
 
     def update_hint(self, session: Session, hint_id: int, **kwargs) -> Optional[Hint]:
         """Update a hint."""
@@ -1289,7 +1289,7 @@ class MemoryService:
             raise
         except Exception as e:
             logger.error(f"Failed to update hint {hint_id}: {e}")
-            raise MemoryServiceError(f"Failed to update hint: {e}")
+            raise MemoryServiceError(f"Failed to update hint: {e}") from None
 
     async def update_hint_async(
         self, session: AsyncSession, hint_id: int, **kwargs
@@ -1311,7 +1311,7 @@ class MemoryService:
             raise
         except Exception as e:
             logger.error(f"Failed to update hint {hint_id}: {e}")
-            raise MemoryServiceError(f"Failed to update hint: {e}")
+            raise MemoryServiceError(f"Failed to update hint: {e}") from None
 
     def delete_hint(self, session: Session, hint_id: int) -> bool:
         """Delete a hint."""
@@ -1327,7 +1327,7 @@ class MemoryService:
             raise
         except Exception as e:
             logger.error(f"Failed to delete hint {hint_id}: {e}")
-            raise MemoryServiceError(f"Failed to delete hint: {e}")
+            raise MemoryServiceError(f"Failed to delete hint: {e}") from None
 
     async def delete_hint_async(self, session: AsyncSession, hint_id: int) -> bool:
         """Delete a hint (async)."""
@@ -1343,7 +1343,7 @@ class MemoryService:
             raise
         except Exception as e:
             logger.error(f"Failed to delete hint {hint_id}: {e}")
-            raise MemoryServiceError(f"Failed to delete hint: {e}")
+            raise MemoryServiceError(f"Failed to delete hint: {e}") from None
 
     # Search across all memory types with semantic and exact search capabilities
     def search_memories(
@@ -1396,7 +1396,7 @@ class MemoryService:
 
         except Exception as e:
             logger.error(f"Failed to search memories: {e}")
-            raise MemoryServiceError(f"Failed to search memories: {e}")
+            raise MemoryServiceError(f"Failed to search memories: {e}") from None
 
     async def search_memories_async(
         self,
@@ -1448,7 +1448,7 @@ class MemoryService:
 
         except Exception as e:
             logger.error(f"Failed to search memories: {e}")
-            raise MemoryServiceError(f"Failed to search memories: {e}")
+            raise MemoryServiceError(f"Failed to search memories: {e}") from None
 
     # Legacy search method for backward compatibility
     def search_memories_legacy(
@@ -1498,7 +1498,9 @@ class MemoryService:
 
         except Exception as e:
             logger.error(f"Failed to search memories (legacy): {e}")
-            raise MemoryServiceError(f"Failed to search memories (legacy): {e}")
+            raise MemoryServiceError(
+                f"Failed to search memories (legacy): {e}"
+            ) from None
 
     async def search_memories_legacy_async(
         self,
@@ -1553,7 +1555,9 @@ class MemoryService:
 
         except Exception as e:
             logger.error(f"Failed to search memories (legacy): {e}")
-            raise MemoryServiceError(f"Failed to search memories (legacy): {e}")
+            raise MemoryServiceError(
+                f"Failed to search memories (legacy): {e}"
+            ) from None
 
     # Helper methods for converting database models to Pydantic models
     def _db_to_pydantic_alias(self, alias_db: AliasDB) -> Alias:
@@ -1681,7 +1685,9 @@ class MemoryService:
 
         except Exception as e:
             logger.error(f"Failed to search memories with filters: {e}")
-            raise MemoryServiceError(f"Failed to search memories with filters: {e}")
+            raise MemoryServiceError(
+                f"Failed to search memories with filters: {e}"
+            ) from None
 
     async def search_memories_with_filters_async(
         self,
@@ -1750,7 +1756,9 @@ class MemoryService:
 
         except Exception as e:
             logger.error(f"Failed to search memories with filters: {e}")
-            raise MemoryServiceError(f"Failed to search memories with filters: {e}")
+            raise MemoryServiceError(
+                f"Failed to search memories with filters: {e}"
+            ) from None
 
     def reindex_all_memories(self, session: Session) -> Dict[str, int]:
         """Reindex all memories for search functionality.
@@ -1765,7 +1773,7 @@ class MemoryService:
             return self.search_service.reindex_all_memories(session)
         except Exception as e:
             logger.error(f"Failed to reindex all memories: {e}")
-            raise MemoryServiceError(f"Failed to reindex all memories: {e}")
+            raise MemoryServiceError(f"Failed to reindex all memories: {e}") from None
 
     async def reindex_all_memories_async(self, session: AsyncSession) -> Dict[str, int]:
         """Reindex all memories for search functionality (async)."""
@@ -1773,7 +1781,7 @@ class MemoryService:
             return await self.search_service.reindex_all_memories_async(session)
         except Exception as e:
             logger.error(f"Failed to reindex all memories: {e}")
-            raise MemoryServiceError(f"Failed to reindex all memories: {e}")
+            raise MemoryServiceError(f"Failed to reindex all memories: {e}") from None
 
     def _db_to_pydantic_hint(self, hint_db: HintDB) -> Hint:
         """Convert database hint to Pydantic hint."""
