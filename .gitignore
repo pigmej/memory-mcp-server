@@ -58,7 +58,6 @@ Thumbs.db
 logs/
 
 # Testing
-test_*.py
 .coverage
 .pytest_cache/
 .tox/
