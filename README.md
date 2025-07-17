@@ -31,12 +31,20 @@ I use this MCP server on a daily basis, but I also use multiple AI tools to work
 ## Installation
 
 ```bash
-uv add memory-mcp-server
+uvx --from git+https://github.com/pigmej/memory-mcp-server.git memory-mcp-server
 ```
 
-Or using uvx for one-time execution:
+Or install globally with uv:
 ```bash
-uvx memory-mcp-server
+uv tool install --from git+https://github.com/pigmej/memory-mcp-server.git memory-mcp-server
+```
+
+For local development:
+```bash
+git clone https://github.com/pigmej/memory-mcp-server.git
+cd memory-mcp-server
+uv sync
+uvx --from . memory-mcp-server
 ```
 
 ## Quick Start
