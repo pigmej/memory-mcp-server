@@ -2,7 +2,7 @@
 
 import logging
 from abc import ABC
-from datetime import datetime
+from datetime import datetime, UTC
 from typing import Any, Dict, Generic, List, Optional, Type, TypeVar
 
 from sqlalchemy import and_, desc, func, or_
@@ -85,7 +85,7 @@ class BaseRepository(Generic[T], ABC):
 
             # Update timestamp if available
             if hasattr(instance, "updated_at"):
-                instance.updated_at = datetime.utcnow()
+                instance.updated_at = datetime.now(UTC)
 
             session.flush()
             session.refresh(instance)
@@ -171,7 +171,7 @@ class BaseRepository(Generic[T], ABC):
 
             # Update timestamp if available
             if hasattr(instance, "updated_at"):
-                instance.updated_at = datetime.utcnow()
+                instance.updated_at = datetime.now(UTC)
 
             await session.flush()
             await session.refresh(instance)

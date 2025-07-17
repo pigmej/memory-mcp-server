@@ -1,7 +1,7 @@
 """MCP protocol implementation using FastMCP."""
 
 import logging
-from datetime import datetime
+from datetime import datetime, UTC
 from typing import Any, Dict, List, Optional
 
 from fastmcp import FastMCP
@@ -101,8 +101,8 @@ class MemoryMCPServer:
                         user_id=user_id,
                         bidirectional=bidirectional,
                         tags=tags,
-                        created_at=datetime.utcnow(),
-                        updated_at=datetime.utcnow(),
+                        created_at=datetime.now(UTC),
+                        updated_at=datetime.now(UTC),
                     )
 
                     result = await self.memory_service.create_alias_async(
@@ -156,8 +156,8 @@ class MemoryMCPServer:
                         user_id=user_id,
                         category=category,
                         tags=tags,
-                        created_at=datetime.utcnow(),
-                        updated_at=datetime.utcnow(),
+                        created_at=datetime.now(UTC),
+                        updated_at=datetime.now(UTC),
                     )
 
                     result = await self.memory_service.create_note_async(session, note)
@@ -212,8 +212,8 @@ class MemoryMCPServer:
                         user_id=user_id,
                         context=context,
                         tags=tags,
-                        created_at=datetime.utcnow(),
-                        updated_at=datetime.utcnow(),
+                        created_at=datetime.now(UTC),
+                        updated_at=datetime.now(UTC),
                     )
 
                     result = await self.memory_service.create_observation_async(
@@ -270,8 +270,8 @@ class MemoryMCPServer:
                         priority=priority,
                         workflow_context=workflow_context,
                         tags=tags,
-                        created_at=datetime.utcnow(),
-                        updated_at=datetime.utcnow(),
+                        created_at=datetime.now(UTC),
+                        updated_at=datetime.now(UTC),
                     )
 
                     result = await self.memory_service.create_hint_async(session, hint)
