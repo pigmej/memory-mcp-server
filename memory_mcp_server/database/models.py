@@ -1,7 +1,7 @@
 """SQLAlchemy database models for the Memory MCP Server."""
 
 import json
-from datetime import datetime
+from datetime import UTC, datetime
 
 from sqlalchemy import (
     Boolean,
@@ -47,7 +47,7 @@ class User(Base):
     __tablename__ = "users"
 
     id = Column(String(255), primary_key=True)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(UTC), nullable=False)
 
     # Relationships
     aliases = relationship(
@@ -74,9 +74,12 @@ class AliasDB(Base):
     target = Column(String(500), nullable=False)
     bidirectional = Column(Boolean, default=True, nullable=False)
     tags = Column(JSONType, default=list)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(UTC), nullable=False)
     updated_at = Column(
-        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
+        DateTime,
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
+        nullable=False,
     )
 
     # Relationships
@@ -100,9 +103,12 @@ class NoteDB(Base):
     content = Column(Text, nullable=False)
     category = Column(String(100), nullable=True)
     tags = Column(JSONType, default=list)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(UTC), nullable=False)
     updated_at = Column(
-        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
+        DateTime,
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
+        nullable=False,
     )
 
     # Relationships
@@ -126,9 +132,12 @@ class ObservationDB(Base):
     entity_id = Column(String(255), nullable=False)
     context = Column(JSONType, default=dict)
     tags = Column(JSONType, default=list)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(UTC), nullable=False)
     updated_at = Column(
-        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
+        DateTime,
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
+        nullable=False,
     )
 
     # Relationships
@@ -150,9 +159,12 @@ class HintDB(Base):
     priority = Column(Integer, default=1, nullable=False)
     workflow_context = Column(String(200), nullable=True)
     tags = Column(JSONType, default=list)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(UTC), nullable=False)
     updated_at = Column(
-        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
+        DateTime,
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
+        nullable=False,
     )
 
     # Relationships
@@ -171,7 +183,7 @@ class EmbeddingDB(Base):
     memory_type = Column(String(50), nullable=False)  # alias, note, observation, hint
     memory_id = Column(Integer, nullable=False)
     embedding = Column(LargeBinary, nullable=False)  # Serialized vector data
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(UTC), nullable=False)
 
     def __repr__(self) -> str:
         return f"<EmbeddingDB(id={self.id}, memory_type='{self.memory_type}', memory_id={self.memory_id})>"
