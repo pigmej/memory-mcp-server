@@ -54,12 +54,18 @@
                         </span>
                         <strong style="margin-left: 0.5rem;">{{ observation.entity_id }}</strong>
                     </div>
-                    <form method="post" action="{{ mount_path }}/observations/{{ observation.id }}/delete" style="display: inline;">
-                        <button type="submit" class="btn btn-danger btn-sm" 
-                                onclick="return confirm('Are you sure you want to delete this observation?')">
-                            Delete
+                    <div>
+                        <button type="button" class="btn btn-primary btn-sm" 
+                                onclick="toggleEditForm('edit-form-{{ observation.id }}')">
+                            Edit
                         </button>
-                    </form>
+                        <form method="post" action="{{ mount_path }}/observations/{{ observation.id }}/delete" style="display: inline;">
+                            <button type="submit" class="btn btn-danger btn-sm" 
+                                    onclick="return confirm('Are you sure you want to delete this observation?')">
+                                Delete
+                            </button>
+                        </form>
+                    </div>
                 </div>
                 <div class="card-body">
                     <p style="white-space: pre-wrap; margin-bottom: 1rem;">{{ observation.content }}</p>
@@ -71,6 +77,28 @@
                         {% endif %}
                     </div>
                 </div>
+                <div id="edit-form-{{ observation.id }}" style="display: none;" class="card-body border-top">
+                    <form method="post" action="{{ mount_path }}/observations/{{ observation.id }}/update" class="edit-form">
+                        <div class="form-group">
+                            <label for="edit-content-{{ observation.id }}" class="form-label">Observation Content</label>
+                            <textarea id="edit-content-{{ observation.id }}" name="content" class="form-control" rows="4" required>{{ observation.content }}</textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-entity-type-{{ observation.id }}" class="form-label">Entity Type</label>
+                            <input type="text" id="edit-entity-type-{{ observation.id }}" name="entity_type" class="form-control" value="{{ observation.entity_type }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-entity-id-{{ observation.id }}" class="form-label">Entity ID</label>
+                            <input type="text" id="edit-entity-id-{{ observation.id }}" name="entity_id" class="form-control" value="{{ observation.entity_id }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-user-id-{{ observation.id }}" class="form-label">User ID (optional)</label>
+                            <input type="text" id="edit-user-id-{{ observation.id }}" name="user_id" class="form-control" value="{{ observation.user_id or '' }}">
+                        </div>
+                        <button type="submit" class="btn btn-success btn-sm">Update Observation</button>
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="toggleEditForm('edit-form-{{ observation.id }}')">Cancel</button>
+                    </form>
+                </div>
             </div>
             {% endfor %}
         </div>
@@ -79,4 +107,15 @@
         {% endif %}
     </div>
 </div>
+
+<script>
+function toggleEditForm(formId) {
+    const form = document.getElementById(formId);
+    if (form.style.display === 'none') {
+        form.style.display = 'block';
+    } else {
+        form.style.display = 'none';
+    }
+}
+</script>
 {% endblock %}

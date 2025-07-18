@@ -93,6 +93,11 @@ class WebUIServer:
         async with await self._get_session() as session:
             return await self.memory_service.delete_alias_async(session, alias_id)
 
+    async def update_alias(self, alias_id: int, **kwargs):
+        """Update alias with session management."""
+        async with await self._get_session() as session:
+            return await self.memory_service.update_alias_async(session, alias_id, **kwargs)
+
     async def get_notes(
         self,
         user_id: Optional[str] = None,
@@ -114,6 +119,11 @@ class WebUIServer:
         """Delete note with session management."""
         async with await self._get_session() as session:
             return await self.memory_service.delete_note_async(session, note_id)
+
+    async def update_note(self, note_id: int, **kwargs):
+        """Update note with session management."""
+        async with await self._get_session() as session:
+            return await self.memory_service.update_note_async(session, note_id, **kwargs)
 
     async def get_observations(
         self, entity_id: Optional[str] = None, user_id: Optional[str] = None
@@ -138,6 +148,11 @@ class WebUIServer:
                 session, observation_id
             )
 
+    async def update_observation(self, observation_id: int, **kwargs):
+        """Update observation with session management."""
+        async with await self._get_session() as session:
+            return await self.memory_service.update_observation_async(session, observation_id, **kwargs)
+
     async def get_hints(
         self, category: Optional[str] = None, user_id: Optional[str] = None
     ):
@@ -154,6 +169,11 @@ class WebUIServer:
         """Delete hint with session management."""
         async with await self._get_session() as session:
             return await self.memory_service.delete_hint_async(session, hint_id)
+
+    async def update_hint(self, hint_id: int, **kwargs):
+        """Update hint with session management."""
+        async with await self._get_session() as session:
+            return await self.memory_service.update_hint_async(session, hint_id, **kwargs)
 
     async def search_memories(
         self, query: str, memory_types: Optional[List[str]] = None
@@ -344,6 +364,30 @@ class WebUIServer:
                 logger.error(f"Delete alias error: {e}")
                 raise HTTPException(status_code=500, detail=str(e)) from None
 
+        @self.app.post("/aliases/{alias_id}/update")
+        async def update_alias_route(
+            request: Request,
+            alias_id: int,
+            source: str = Form(...),
+            target: str = Form(...),
+            user_id: Optional[str] = Form(None),
+            bidirectional: bool = Form(True),
+        ):
+            """Update an alias."""
+            try:
+                await self.update_alias(
+                    alias_id,
+                    source=source,
+                    target=target,
+                    user_id=user_id,
+                    bidirectional=bidirectional,
+                )
+                mount_path = self._get_mount_path(request)
+                return RedirectResponse(url=f"{mount_path}/aliases", status_code=303)
+            except Exception as e:
+                logger.error(f"Update alias error: {e}")
+                raise HTTPException(status_code=500, detail=str(e)) from None
+
         # Notes routes
         @self.app.get("/notes", response_class=HTMLResponse)
         async def notes_page(request: Request):
@@ -388,6 +432,30 @@ class WebUIServer:
                 return RedirectResponse(url=f"{mount_path}/notes", status_code=303)
             except Exception as e:
                 logger.error(f"Delete note error: {e}")
+                raise HTTPException(status_code=500, detail=str(e)) from None
+
+        @self.app.post("/notes/{note_id}/update")
+        async def update_note_route(
+            request: Request,
+            note_id: int,
+            title: str = Form(...),
+            content: str = Form(...),
+            category: Optional[str] = Form(None),
+            user_id: Optional[str] = Form(None),
+        ):
+            """Update a note."""
+            try:
+                await self.update_note(
+                    note_id,
+                    title=title,
+                    content=content,
+                    category=category,
+                    user_id=user_id,
+                )
+                mount_path = self._get_mount_path(request)
+                return RedirectResponse(url=f"{mount_path}/notes", status_code=303)
+            except Exception as e:
+                logger.error(f"Update note error: {e}")
                 raise HTTPException(status_code=500, detail=str(e)) from None
 
         # Observations routes
@@ -447,6 +515,32 @@ class WebUIServer:
                 logger.error(f"Delete observation error: {e}")
                 raise HTTPException(status_code=500, detail=str(e)) from None
 
+        @self.app.post("/observations/{observation_id}/update")
+        async def update_observation_route(
+            request: Request,
+            observation_id: int,
+            content: str = Form(...),
+            entity_type: str = Form(...),
+            entity_id: str = Form(...),
+            user_id: Optional[str] = Form(None),
+        ):
+            """Update an observation."""
+            try:
+                await self.update_observation(
+                    observation_id,
+                    content=content,
+                    entity_type=entity_type,
+                    entity_id=entity_id,
+                    user_id=user_id,
+                )
+                mount_path = self._get_mount_path(request)
+                return RedirectResponse(
+                    url=f"{mount_path}/observations", status_code=303
+                )
+            except Exception as e:
+                logger.error(f"Update observation error: {e}")
+                raise HTTPException(status_code=500, detail=str(e)) from None
+
         # Hints routes
         @self.app.get("/hints", response_class=HTMLResponse)
         async def hints_page(request: Request):
@@ -496,6 +590,32 @@ class WebUIServer:
                 return RedirectResponse(url=f"{mount_path}/hints", status_code=303)
             except Exception as e:
                 logger.error(f"Delete hint error: {e}")
+                raise HTTPException(status_code=500, detail=str(e)) from None
+
+        @self.app.post("/hints/{hint_id}/update")
+        async def update_hint_route(
+            request: Request,
+            hint_id: int,
+            content: str = Form(...),
+            category: str = Form(...),
+            priority: int = Form(1),
+            workflow_context: Optional[str] = Form(None),
+            user_id: Optional[str] = Form(None),
+        ):
+            """Update a hint."""
+            try:
+                await self.update_hint(
+                    hint_id,
+                    content=content,
+                    category=category,
+                    priority=priority,
+                    workflow_context=workflow_context,
+                    user_id=user_id,
+                )
+                mount_path = self._get_mount_path(request)
+                return RedirectResponse(url=f"{mount_path}/hints", status_code=303)
+            except Exception as e:
+                logger.error(f"Update hint error: {e}")
                 raise HTTPException(status_code=500, detail=str(e)) from None
 
         # Search routes

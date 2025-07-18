@@ -25,7 +25,7 @@ COPY . .
 RUN mkdir -p /app/data
 
 # Expose ports
-EXPOSE 8000 8001 8002
+EXPOSE 8000 8001 8002 8080
 
 # Set environment variables
 ENV PYTHONPATH=/app

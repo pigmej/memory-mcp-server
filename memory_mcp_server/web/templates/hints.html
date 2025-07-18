@@ -72,12 +72,18 @@
                         </span>
                         {% endif %}
                     </div>
-                    <form method="post" action="{{ mount_path }}/hints/{{ hint.id }}/delete" style="display: inline;">
-                        <button type="submit" class="btn btn-danger btn-sm" 
-                                onclick="return confirm('Are you sure you want to delete this hint?')">
-                            Delete
+                    <div>
+                        <button type="button" class="btn btn-primary btn-sm" 
+                                onclick="toggleEditForm('edit-form-{{ hint.id }}')">
+                            Edit
                         </button>
-                    </form>
+                        <form method="post" action="{{ mount_path }}/hints/{{ hint.id }}/delete" style="display: inline;">
+                            <button type="submit" class="btn btn-danger btn-sm" 
+                                    onclick="return confirm('Are you sure you want to delete this hint?')">
+                                Delete
+                            </button>
+                        </form>
+                    </div>
                 </div>
                 <div class="card-body">
                     <p style="white-space: pre-wrap; margin-bottom: 1rem;">{{ hint.content }}</p>
@@ -89,6 +95,37 @@
                         {% endif %}
                     </div>
                 </div>
+                <div id="edit-form-{{ hint.id }}" style="display: none;" class="card-body border-top">
+                    <form method="post" action="{{ mount_path }}/hints/{{ hint.id }}/update" class="edit-form">
+                        <div class="form-group">
+                            <label for="edit-content-{{ hint.id }}" class="form-label">Hint Content</label>
+                            <textarea id="edit-content-{{ hint.id }}" name="content" class="form-control" rows="4" required>{{ hint.content }}</textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-category-{{ hint.id }}" class="form-label">Category</label>
+                            <input type="text" id="edit-category-{{ hint.id }}" name="category" class="form-control" value="{{ hint.category }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-priority-{{ hint.id }}" class="form-label">Priority</label>
+                            <select id="edit-priority-{{ hint.id }}" name="priority" class="form-control">
+                                <option value="1" {% if hint.priority == 1 %}selected{% endif %}>1 - Low</option>
+                                <option value="2" {% if hint.priority == 2 %}selected{% endif %}>2 - Medium</option>
+                                <option value="3" {% if hint.priority == 3 %}selected{% endif %}>3 - High</option>
+                                <option value="4" {% if hint.priority == 4 %}selected{% endif %}>4 - Critical</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-workflow-context-{{ hint.id }}" class="form-label">Workflow Context (optional)</label>
+                            <input type="text" id="edit-workflow-context-{{ hint.id }}" name="workflow_context" class="form-control" value="{{ hint.workflow_context or '' }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-user-id-{{ hint.id }}" class="form-label">User ID (optional)</label>
+                            <input type="text" id="edit-user-id-{{ hint.id }}" name="user_id" class="form-control" value="{{ hint.user_id or '' }}">
+                        </div>
+                        <button type="submit" class="btn btn-success btn-sm">Update Hint</button>
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="toggleEditForm('edit-form-{{ hint.id }}')">Cancel</button>
+                    </form>
+                </div>
             </div>
             {% endfor %}
         </div>
@@ -97,4 +134,15 @@
         {% endif %}
     </div>
 </div>
+
+<script>
+function toggleEditForm(formId) {
+    const form = document.getElementById(formId);
+    if (form.style.display === 'none') {
+        form.style.display = 'block';
+    } else {
+        form.style.display = 'none';
+    }
+}
+</script>
 {% endblock %}

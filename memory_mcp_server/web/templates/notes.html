@@ -52,6 +52,10 @@
                             {{ note.category }}
                         </span>
                         {% endif %}
+                        <button type="button" class="btn btn-primary btn-sm" 
+                                onclick="toggleEditForm('edit-form-{{ note.id }}')">
+                            Edit
+                        </button>
                         <form method="post" action="{{ mount_path }}/notes/{{ note.id }}/delete" style="display: inline;">
                             <button type="submit" class="btn btn-danger btn-sm" 
                                     onclick="return confirm('Are you sure you want to delete this note?')">
@@ -70,6 +74,28 @@
                         {% endif %}
                     </div>
                 </div>
+                <div id="edit-form-{{ note.id }}" style="display: none;" class="card-body border-top">
+                    <form method="post" action="{{ mount_path }}/notes/{{ note.id }}/update" class="edit-form">
+                        <div class="form-group">
+                            <label for="edit-title-{{ note.id }}" class="form-label">Title</label>
+                            <input type="text" id="edit-title-{{ note.id }}" name="title" class="form-control" value="{{ note.title }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-content-{{ note.id }}" class="form-label">Content</label>
+                            <textarea id="edit-content-{{ note.id }}" name="content" class="form-control" rows="5" required>{{ note.content }}</textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-category-{{ note.id }}" class="form-label">Category (optional)</label>
+                            <input type="text" id="edit-category-{{ note.id }}" name="category" class="form-control" value="{{ note.category or '' }}" placeholder="e.g., work, personal, ideas">
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-user-id-{{ note.id }}" class="form-label">User ID (optional)</label>
+                            <input type="text" id="edit-user-id-{{ note.id }}" name="user_id" class="form-control" value="{{ note.user_id or '' }}">
+                        </div>
+                        <button type="submit" class="btn btn-success btn-sm">Update Note</button>
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="toggleEditForm('edit-form-{{ note.id }}')">Cancel</button>
+                    </form>
+                </div>
             </div>
             {% endfor %}
         </div>
@@ -78,4 +104,15 @@
         {% endif %}
     </div>
 </div>
+
+<script>
+function toggleEditForm(formId) {
+    const form = document.getElementById(formId);
+    if (form.style.display === 'none') {
+        form.style.display = 'block';
+    } else {
+        form.style.display = 'none';
+    }
+}
+</script>
 {% endblock %}

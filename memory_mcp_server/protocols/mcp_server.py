@@ -336,7 +336,11 @@ class MemoryMCPServer:
 
                     # Format results as plain text for better display
                     if not results:
-                        return f"No results found for query: '{query}'"
+                        return {
+                            "success": True,
+                            "message": f"No results found for query: '{query}'",
+                            "results": []
+                        }
 
                     result_text = (
                         f"Search Results for '{query}' ({len(results)} found):\n"
@@ -403,7 +407,11 @@ class MemoryMCPServer:
 
                         result_text += "\n"
 
-                    return result_text
+                    return {
+                        "success": True,
+                        "message": f"Found {len(results)} results for query: '{query}'",
+                        "results": result_text
+                    }
             except SearchServiceError as e:
                 logger.error(f"Failed to search memories: {e}")
                 return {
@@ -859,25 +867,60 @@ class MemoryMCPServer:
         async def get_all_user_memories(user_id: str) -> str:
             """Get all memories for a specific user."""
             try:
-                content = f"# All Memories for user: {user_id}\n\n"
+                async with self.db_manager.get_async_session() as session:
+                    content = f"# All Memories for user: {user_id}\n\n"
 
-                # Get aliases
-                aliases_content = await get_user_aliases(user_id)
-                content += aliases_content + "\n"
+                    # Get aliases
+                    aliases = await self.memory_service.get_aliases_async(
+                        session, user_id=user_id, limit=1000
+                    )
+                    content += f"## Aliases ({len(aliases)})\n\n"
+                    for alias in aliases:
+                        direction = "↔" if alias.bidirectional else "→"
+                        content += f"- {alias.source} {direction} {alias.target}\n"
+                        if alias.tags:
+                            content += f"  Tags: {', '.join(alias.tags)}\n"
+                    content += "\n"
 
-                # Get notes
-                notes_content = await get_user_notes(user_id)
-                content += notes_content + "\n"
+                    # Get notes
+                    notes = await self.memory_service.get_notes_async(
+                        session, user_id=user_id, limit=1000
+                    )
+                    content += f"## Notes ({len(notes)})\n\n"
+                    for note in notes:
+                        content += f"### {note.title}\n"
+                        content += f"{note.content}\n"
+                        if note.category:
+                            content += f"*Category: {note.category}*\n"
+                        if note.tags:
+                            content += f"*Tags: {', '.join(note.tags)}*\n"
+                        content += "\n"
 
-                # Get observations
-                observations_content = await get_user_observations(user_id)
-                content += observations_content + "\n"
+                    # Get observations
+                    observations = await self.memory_service.get_observations_async(
+                        session, user_id=user_id, limit=1000
+                    )
+                    content += f"## Observations ({len(observations)})\n\n"
+                    for obs in observations:
+                        content += f"### {obs.entity_type}: {obs.entity_id}\n"
+                        content += f"{obs.content}\n"
+                        if obs.tags:
+                            content += f"*Tags: {', '.join(obs.tags)}*\n"
+                        content += "\n"
 
-                # Get hints
-                hints_content = await get_user_hints(user_id)
-                content += hints_content + "\n"
+                    # Get hints
+                    hints = await self.memory_service.get_hints_async(
+                        session, user_id=user_id, limit=1000
+                    )
+                    content += f"## Hints ({len(hints)})\n\n"
+                    for hint in hints:
+                        content += f"### {hint.category} (Priority: {hint.priority})\n"
+                        content += f"{hint.content}\n"
+                        if hint.tags:
+                            content += f"*Tags: {', '.join(hint.tags)}*\n"
+                        content += "\n"
 
-                return content
+                    return content
             except Exception as e:
                 logger.error(f"Failed to get all user memories resource: {e}")
                 return f"Error loading all memories for user {user_id}: {str(e)}"
