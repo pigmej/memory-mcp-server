@@ -1,6 +1,6 @@
 """Base Pydantic models for the Memory MCP Server."""
 
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import Enum
 from typing import List, Optional
 
@@ -24,10 +24,10 @@ class BaseMemory(BaseModel):
         None, description="User identifier for data separation"
     )
     created_at: datetime = Field(
-        default_factory=datetime.utcnow, description="Creation timestamp"
+        default_factory=lambda: datetime.now(UTC), description="Creation timestamp"
     )
     updated_at: datetime = Field(
-        default_factory=datetime.utcnow, description="Last update timestamp"
+        default_factory=lambda: datetime.now(UTC), description="Last update timestamp"
     )
     tags: List[str] = Field(default_factory=list, description="Tags for categorization")
 
@@ -53,7 +53,7 @@ class BaseMemory(BaseModel):
 
     def update_timestamp(self) -> None:
         """Update the updated_at timestamp."""
-        self.updated_at = datetime.utcnow()
+        self.updated_at = datetime.now(UTC)
 
     def add_tag(self, tag: str) -> None:
         """Add a tag if it doesn't already exist."""

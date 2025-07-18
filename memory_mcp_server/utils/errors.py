@@ -2,7 +2,7 @@
 
 import logging
 import traceback
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional, Union
 
@@ -52,7 +52,7 @@ class ErrorDetails(BaseModel):
     message: str
     details: Optional[str] = None
     context: Optional[ErrorContext] = None
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))
     traceback: Optional[str] = None
     suggestions: List[str] = Field(default_factory=list)
     retry_after: Optional[int] = None  # Seconds to wait before retry
@@ -81,7 +81,7 @@ class BaseMemoryError(Exception):
         self.suggestions = suggestions or []
         self.retry_after = retry_after
         self.cause = cause
-        self.timestamp = datetime.utcnow()
+        self.timestamp = datetime.now(UTC)
 
         # Generate unique error ID
         import uuid

@@ -1,7 +1,7 @@
 """Core memory service for managing all memory types."""
 
 import logging
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any, Dict, List, Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -125,9 +125,7 @@ class MemoryService:
 
             # Index the alias for search
             try:
-                search_service = self._get_search_service()
-                if search_service:
-                    search_service.index_memory(session, result)
+                self.search_service.index_memory(session, result)
                 session.commit()
             except Exception as e:
                 logger.warning(f"Failed to index alias {result.id} for search: {e}")
@@ -163,9 +161,7 @@ class MemoryService:
 
             # Index the alias for search
             try:
-                search_service = self._get_search_service()
-                if search_service:
-                    await search_service.index_memory_async(session, result)
+                await self.search_service.index_memory_async(session, result)
                 await session.commit()
             except Exception as e:
                 logger.warning(f"Failed to index alias {result.id} for search: {e}")
@@ -241,7 +237,7 @@ class MemoryService:
         """Update an alias."""
         try:
             # Update timestamp
-            kwargs["updated_at"] = datetime.utcnow()
+            kwargs["updated_at"] = datetime.now(UTC)
 
             alias_db = self.alias_repo.update(session, alias_id, **kwargs)
             if not alias_db:
@@ -251,9 +247,7 @@ class MemoryService:
 
             # Re-index the updated alias for search
             try:
-                search_service = self._get_search_service()
-                if search_service:
-                    search_service.index_memory(session, result)
+                self.search_service.index_memory(session, result)
                 session.commit()
             except Exception as e:
                 logger.warning(
@@ -275,7 +269,7 @@ class MemoryService:
         """Update an alias (async)."""
         try:
             # Update timestamp
-            kwargs["updated_at"] = datetime.utcnow()
+            kwargs["updated_at"] = datetime.now(UTC)
 
             alias_db = await self.alias_repo.update_async(session, alias_id, **kwargs)
             if not alias_db:
@@ -685,9 +679,7 @@ class MemoryService:
 
             # Index the note for search
             try:
-                search_service = self._get_search_service()
-                if search_service:
-                    search_service.index_memory(session, result)
+                self.search_service.index_memory(session, result)
                 session.commit()
             except Exception as e:
                 logger.warning(f"Failed to index note {result.id} for search: {e}")
@@ -723,9 +715,7 @@ class MemoryService:
 
             # Index the note for search
             try:
-                search_service = self._get_search_service()
-                if search_service:
-                    await search_service.index_memory_async(session, result)
+                await self.search_service.index_memory_async(session, result)
                 await session.commit()
             except Exception as e:
                 logger.warning(f"Failed to index note {result.id} for search: {e}")
@@ -807,7 +797,7 @@ class MemoryService:
         """Update a note."""
         try:
             # Update timestamp
-            kwargs["updated_at"] = datetime.utcnow()
+            kwargs["updated_at"] = datetime.now(UTC)
 
             note_db = self.note_repo.update(session, note_id, **kwargs)
             if not note_db:
@@ -829,7 +819,7 @@ class MemoryService:
         """Update a note (async)."""
         try:
             # Update timestamp
-            kwargs["updated_at"] = datetime.utcnow()
+            kwargs["updated_at"] = datetime.now(UTC)
 
             note_db = await self.note_repo.update_async(session, note_id, **kwargs)
             if not note_db:
@@ -905,9 +895,7 @@ class MemoryService:
 
             # Index the observation for search
             try:
-                search_service = self._get_search_service()
-                if search_service:
-                    search_service.index_memory(session, result)
+                self.search_service.index_memory(session, result)
                 session.commit()
             except Exception as e:
                 logger.warning(
@@ -950,9 +938,7 @@ class MemoryService:
 
             # Index the observation for search
             try:
-                search_service = self._get_search_service()
-                if search_service:
-                    await search_service.index_memory_async(session, result)
+                await self.search_service.index_memory_async(session, result)
                 await session.commit()
             except Exception as e:
                 logger.warning(
@@ -1058,7 +1044,7 @@ class MemoryService:
         """Update an observation."""
         try:
             # Update timestamp
-            kwargs["updated_at"] = datetime.utcnow()
+            kwargs["updated_at"] = datetime.now(UTC)
 
             observation_db = self.observation_repo.update(
                 session, observation_id, **kwargs
@@ -1082,7 +1068,7 @@ class MemoryService:
         """Update an observation (async)."""
         try:
             # Update timestamp
-            kwargs["updated_at"] = datetime.utcnow()
+            kwargs["updated_at"] = datetime.now(UTC)
 
             observation_db = await self.observation_repo.update_async(
                 session, observation_id, **kwargs
@@ -1160,9 +1146,7 @@ class MemoryService:
 
             # Index the hint for search
             try:
-                search_service = self._get_search_service()
-                if search_service:
-                    search_service.index_memory(session, result)
+                self.search_service.index_memory(session, result)
                 session.commit()
             except Exception as e:
                 logger.warning(f"Failed to index hint {result.id} for search: {e}")
@@ -1199,9 +1183,7 @@ class MemoryService:
 
             # Index the hint for search
             try:
-                search_service = self._get_search_service()
-                if search_service:
-                    await search_service.index_memory_async(session, result)
+                await self.search_service.index_memory_async(session, result)
                 await session.commit()
             except Exception as e:
                 logger.warning(f"Failed to index hint {result.id} for search: {e}")
@@ -1293,7 +1275,7 @@ class MemoryService:
         """Update a hint."""
         try:
             # Update timestamp
-            kwargs["updated_at"] = datetime.utcnow()
+            kwargs["updated_at"] = datetime.now(UTC)
 
             hint_db = self.hint_repo.update(session, hint_id, **kwargs)
             if not hint_db:
@@ -1315,7 +1297,7 @@ class MemoryService:
         """Update a hint (async)."""
         try:
             # Update timestamp
-            kwargs["updated_at"] = datetime.utcnow()
+            kwargs["updated_at"] = datetime.now(UTC)
 
             hint_db = await self.hint_repo.update_async(session, hint_id, **kwargs)
             if not hint_db:
@@ -1390,21 +1372,15 @@ class MemoryService:
         """
         try:
             if search_type == "semantic":
-                search_service = self._get_search_service()
-            if search_service:
-                return search_service.semantic_search(
+                return self.search_service.semantic_search(
                     session, query, memory_types, user_id, limit, similarity_threshold
                 )
             elif search_type == "exact":
-                search_service = self._get_search_service()
-            if search_service:
-                return search_service.exact_search(
+                return self.search_service.exact_search(
                     session, query, memory_types, user_id, limit
                 )
             elif search_type == "combined":
-                search_service = self._get_search_service()
-            if search_service:
-                return search_service.combined_search(
+                return self.search_service.combined_search(
                     session,
                     query,
                     memory_types,
@@ -1448,21 +1424,15 @@ class MemoryService:
         """
         try:
             if search_type == "semantic":
-                search_service = self._get_search_service()
-            if search_service:
-                return await search_service.semantic_search_async(
+                return await self.search_service.semantic_search_async(
                     session, query, memory_types, user_id, limit, similarity_threshold
                 )
             elif search_type == "exact":
-                search_service = self._get_search_service()
-            if search_service:
-                return await search_service.exact_search_async(
+                return await self.search_service.exact_search_async(
                     session, query, memory_types, user_id, limit
                 )
             elif search_type == "combined":
-                search_service = self._get_search_service()
-            if search_service:
-                return await search_service.combined_search_async(
+                return await self.search_service.combined_search_async(
                     session,
                     query,
                     memory_types,
@@ -1800,10 +1770,7 @@ class MemoryService:
             Dictionary with counts of reindexed memories by type
         """
         try:
-            search_service = self._get_search_service()
-            if search_service:
-                return search_service.reindex_all_memories(session)
-            return False
+            return self.search_service.reindex_all_memories(session)
         except Exception as e:
             logger.error(f"Failed to reindex all memories: {e}")
             raise MemoryServiceError(f"Failed to reindex all memories: {e}") from None
@@ -1811,10 +1778,7 @@ class MemoryService:
     async def reindex_all_memories_async(self, session: AsyncSession) -> Dict[str, int]:
         """Reindex all memories for search functionality (async)."""
         try:
-            search_service = self._get_search_service()
-            if search_service:
-                return await search_service.reindex_all_memories_async(session)
-            return False
+            return await self.search_service.reindex_all_memories_async(session)
         except Exception as e:
             logger.error(f"Failed to reindex all memories: {e}")
             raise MemoryServiceError(f"Failed to reindex all memories: {e}") from None

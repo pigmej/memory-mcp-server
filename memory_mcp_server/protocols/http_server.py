@@ -3,7 +3,7 @@
 import asyncio
 import json
 import logging
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any, AsyncGenerator, Dict, List, Optional
 
 from fastapi import Depends, FastAPI, HTTPException, Query
@@ -149,7 +149,7 @@ class StreamingSearchRequest(BaseModel):
 class ErrorResponse(BaseModel):
     error: str = Field(..., description="Error message")
     detail: Optional[str] = Field(None, description="Error details")
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
 class MemoryHTTPServer:
@@ -195,7 +195,7 @@ class MemoryHTTPServer:
         @self.app.get("/health")
         async def health_check():
             """Basic health check endpoint."""
-            return {"status": "healthy", "timestamp": datetime.utcnow()}
+            return {"status": "healthy", "timestamp": datetime.now(UTC)}
 
         @self.app.get("/health/detailed")
         async def detailed_health_check():
@@ -230,7 +230,7 @@ class MemoryHTTPServer:
 
             return {
                 "status": overall_status,
-                "timestamp": datetime.utcnow(),
+                "timestamp": datetime.now(UTC),
                 "components": component_health,
             }
 
@@ -251,7 +251,7 @@ class MemoryHTTPServer:
                 stats = {"error": "Failed to retrieve stats"}
 
             return {
-                "timestamp": datetime.utcnow(),
+                "timestamp": datetime.now(UTC),
                 "error_statistics": error_stats,
                 "memory_statistics": stats,
                 "system_info": {
@@ -278,8 +278,8 @@ class MemoryHTTPServer:
                     user_id=request.user_id,
                     bidirectional=request.bidirectional,
                     tags=request.tags,
-                    created_at=datetime.utcnow(),
-                    updated_at=datetime.utcnow(),
+                    created_at=datetime.now(UTC),
+                    updated_at=datetime.now(UTC),
                 )
                 result = await self.memory_service.create_alias_async(session, alias)
                 return result
@@ -348,8 +348,8 @@ class MemoryHTTPServer:
                     user_id=request.user_id,
                     category=request.category,
                     tags=request.tags,
-                    created_at=datetime.utcnow(),
-                    updated_at=datetime.utcnow(),
+                    created_at=datetime.now(UTC),
+                    updated_at=datetime.now(UTC),
                 )
                 result = await self.memory_service.create_note_async(session, note)
                 return result
@@ -404,8 +404,8 @@ class MemoryHTTPServer:
                     user_id=request.user_id,
                     context=request.context,
                     tags=request.tags,
-                    created_at=datetime.utcnow(),
-                    updated_at=datetime.utcnow(),
+                    created_at=datetime.now(UTC),
+                    updated_at=datetime.now(UTC),
                 )
                 result = await self.memory_service.create_observation_async(
                     session, observation
@@ -462,8 +462,8 @@ class MemoryHTTPServer:
                     priority=request.priority,
                     workflow_context=request.workflow_context,
                     tags=request.tags,
-                    created_at=datetime.utcnow(),
-                    updated_at=datetime.utcnow(),
+                    created_at=datetime.now(UTC),
+                    updated_at=datetime.now(UTC),
                 )
                 result = await self.memory_service.create_hint_async(session, hint)
                 return result
@@ -834,7 +834,7 @@ class MemoryHTTPServer:
             metadata = {
                 "type": "metadata",
                 "query": request.query,
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
                 "semantic": request.semantic,
             }
             yield json.dumps(metadata) + "\n"
@@ -865,7 +865,7 @@ class MemoryHTTPServer:
             completion = {
                 "type": "complete",
                 "total_results": len(results),
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
             }
             yield json.dumps(completion) + "\n"
 
@@ -873,7 +873,7 @@ class MemoryHTTPServer:
             error_data = {
                 "type": "error",
                 "error": str(e),
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
             }
             yield json.dumps(error_data) + "\n"
 
@@ -910,7 +910,7 @@ class MemoryHTTPServer:
             metadata = {
                 "type": "metadata",
                 "query": request.query,
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
                 "semantic": request.semantic,
                 "memory_types": request.memory_types
                 or ["alias", "note", "observation", "hint"],
@@ -966,7 +966,7 @@ class MemoryHTTPServer:
                         "type": "error",
                         "memory_type": memory_type,
                         "error": str(e),
-                        "timestamp": datetime.utcnow().isoformat(),
+                        "timestamp": datetime.now(UTC).isoformat(),
                     }
                     yield json.dumps(error_data) + "\n"
 
@@ -974,7 +974,7 @@ class MemoryHTTPServer:
             completion = {
                 "type": "complete",
                 "total_results": total_results,
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
             }
             yield json.dumps(completion) + "\n"
 
@@ -982,7 +982,7 @@ class MemoryHTTPServer:
             error_data = {
                 "type": "error",
                 "error": str(e),
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
             }
             yield json.dumps(error_data) + "\n"
 
@@ -998,7 +998,7 @@ class MemoryHTTPServer:
                 "hints": 0,
                 "total": 0,
                 "user_id": user_id,
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
             }
 
             # Count aliases
@@ -1037,7 +1037,7 @@ class MemoryHTTPServer:
 
         except Exception as e:
             logger.error(f"Failed to get memory stats: {e}")
-            return {"error": str(e), "timestamp": datetime.utcnow().isoformat()}
+            return {"error": str(e), "timestamp": datetime.now(UTC).isoformat()}
 
 
 def create_http_server(config: Optional[Config] = None) -> MemoryHTTPServer:
