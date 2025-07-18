@@ -96,7 +96,9 @@ class WebUIServer:
     async def update_alias(self, alias_id: int, **kwargs):
         """Update alias with session management."""
         async with await self._get_session() as session:
-            return await self.memory_service.update_alias_async(session, alias_id, **kwargs)
+            return await self.memory_service.update_alias_async(
+                session, alias_id, **kwargs
+            )
 
     async def get_notes(
         self,
@@ -123,7 +125,9 @@ class WebUIServer:
     async def update_note(self, note_id: int, **kwargs):
         """Update note with session management."""
         async with await self._get_session() as session:
-            return await self.memory_service.update_note_async(session, note_id, **kwargs)
+            return await self.memory_service.update_note_async(
+                session, note_id, **kwargs
+            )
 
     async def get_observations(
         self, entity_id: Optional[str] = None, user_id: Optional[str] = None
@@ -151,7 +155,9 @@ class WebUIServer:
     async def update_observation(self, observation_id: int, **kwargs):
         """Update observation with session management."""
         async with await self._get_session() as session:
-            return await self.memory_service.update_observation_async(session, observation_id, **kwargs)
+            return await self.memory_service.update_observation_async(
+                session, observation_id, **kwargs
+            )
 
     async def get_hints(
         self, category: Optional[str] = None, user_id: Optional[str] = None
@@ -173,7 +179,9 @@ class WebUIServer:
     async def update_hint(self, hint_id: int, **kwargs):
         """Update hint with session management."""
         async with await self._get_session() as session:
-            return await self.memory_service.update_hint_async(session, hint_id, **kwargs)
+            return await self.memory_service.update_hint_async(
+                session, hint_id, **kwargs
+            )
 
     async def search_memories(
         self, query: str, memory_types: Optional[List[str]] = None

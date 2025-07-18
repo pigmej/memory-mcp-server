@@ -339,7 +339,7 @@ class MemoryMCPServer:
                         return {
                             "success": True,
                             "message": f"No results found for query: '{query}'",
-                            "results": []
+                            "results": [],
                         }
 
                     result_text = (
@@ -410,7 +410,7 @@ class MemoryMCPServer:
                     return {
                         "success": True,
                         "message": f"Found {len(results)} results for query: '{query}'",
-                        "results": result_text
+                        "results": result_text,
                     }
             except SearchServiceError as e:
                 logger.error(f"Failed to search memories: {e}")
