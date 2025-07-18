@@ -1,7 +1,7 @@
 """MCP protocol implementation using FastMCP."""
 
 import logging
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 from typing import Any, Dict, List, Optional
 
 from fastmcp import FastMCP

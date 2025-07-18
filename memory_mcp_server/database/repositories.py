@@ -2,7 +2,7 @@
 
 import logging
 from abc import ABC
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 from typing import Any, Dict, Generic, List, Optional, Type, TypeVar
 
 from sqlalchemy import and_, desc, func, or_
