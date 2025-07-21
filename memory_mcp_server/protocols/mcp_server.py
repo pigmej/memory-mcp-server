@@ -473,14 +473,14 @@ class MemoryMCPServer:
         async def get_memories(
             memory_type: str,
             user_id: Optional[str] = None,
-            limit: int = 10,
+            limit: int = 20,
             skip: int = 0,
             category: Optional[str] = None,
             query: Optional[str] = None,
             entity_id: Optional[str] = None,
             entity_type: Optional[str] = None,
         ) -> Dict[str, Any]:
-            """Get memories of a specific type with optional filtering.
+            """Get memories of a specific type with optional filtering. Use to retrieve memories.
 
             Args:
                 memory_type: Type of memory (alias, note, observation, hint)
@@ -538,7 +538,7 @@ class MemoryMCPServer:
                     return {
                         "success": True,
                         "memory_type": memory_type,
-                        "memories": [memory.model_dump() for memory in results],
+                        "memories": [memory.model_dump_compact() for memory in results],
                         "count": len(results),
                         "skip": skip,
                         "limit": limit,
@@ -560,7 +560,7 @@ class MemoryMCPServer:
 
         @self.mcp.tool()
         async def get_users() -> Dict[str, Any]:
-            """Get all user IDs in the system."""
+            """Get all user IDs in the system. Usefull to map later users"""
             try:
                 async with self.db_manager.get_async_session() as session:
                     users = await self.memory_service.get_users_async(session)
@@ -754,176 +754,221 @@ class MemoryMCPServer:
                     "message": "An unexpected error occurred",
                 }
 
+        @self.mcp.tool(name="get_user_aliases")
+        async def get_user_aliases_tool(user_id: str) -> str:
+            """Get all aliases for a specific user."""
+            return await self._get_user_aliases_inner(user_id)
+
+        @self.mcp.tool(name="get_user_notes")
+        async def get_user_notes_tool(user_id: str) -> str:
+            """Get all notes for a specific user."""
+            return await self._get_user_notes_inner(user_id)
+
+        @self.mcp.tool(name="get_user_observations")
+        async def get_user_observations_tool(user_id: str) -> str:
+            """Get all observations for a specific user."""
+            return await self._get_user_observations_inner(user_id)
+
+        @self.mcp.tool(name="get_user_hints")
+        async def get_user_hints_tool(user_id: str) -> str:
+            """Get all hints for a specific user."""
+            return await self._get_user_hints_inner(user_id)
+
+        @self.mcp.tool(name="get_all_user_memories")
+        async def get_all_user_memories_tool(user_id: str) -> str:
+            """Get all memories for a specific user."""
+            return await self._get_all_user_memories_inner(user_id)
+
     def _register_resources(self):
         """Register MCP resources for exposing stored data."""
 
         @self.mcp.resource("memory://aliases/{user_id}")
         async def get_user_aliases(user_id: str) -> str:
             """Get all aliases for a specific user."""
-            try:
-                async with self.db_manager.get_async_session() as session:
-                    aliases = await self.memory_service.get_aliases_async(
-                        session, user_id=user_id, limit=1000
-                    )
-
-                    content = f"# Aliases for user: {user_id}\n\n"
-                    for alias in aliases:
-                        direction = "↔" if alias.bidirectional else "→"
-                        content += f"- {alias.source} {direction} {alias.target}\n"
-                        if alias.tags:
-                            content += f"  Tags: {', '.join(alias.tags)}\n"
-
-                    return content
-            except Exception as e:
-                logger.error(f"Failed to get user aliases resource: {e}")
-                return f"Error loading aliases for user {user_id}: {str(e)}"
+            return await self._get_user_aliases_inner(user_id)
 
         @self.mcp.resource("memory://notes/{user_id}")
         async def get_user_notes(user_id: str) -> str:
             """Get all notes for a specific user."""
-            try:
-                async with self.db_manager.get_async_session() as session:
-                    notes = await self.memory_service.get_notes_async(
-                        session, user_id=user_id, limit=1000
-                    )
-
-                    content = f"# Notes for user: {user_id}\n\n"
-                    for note in notes:
-                        content += f"## {note.title}\n"
-                        if note.category:
-                            content += f"**Category:** {note.category}\n"
-                        content += f"{note.content}\n"
-                        if note.tags:
-                            content += f"**Tags:** {', '.join(note.tags)}\n"
-                        content += f"**Created:** {note.created_at}\n\n"
-
-                    return content
-            except Exception as e:
-                logger.error(f"Failed to get user notes resource: {e}")
-                return f"Error loading notes for user {user_id}: {str(e)}"
+            return await self._get_user_notes_inner(user_id)
 
         @self.mcp.resource("memory://observations/{user_id}")
         async def get_user_observations(user_id: str) -> str:
             """Get all observations for a specific user."""
-            try:
-                async with self.db_manager.get_async_session() as session:
-                    observations = await self.memory_service.get_observations_async(
-                        session, user_id=user_id, limit=1000
-                    )
-
-                    content = f"# Observations for user: {user_id}\n\n"
-                    for obs in observations:
-                        content += f"## {obs.entity_type}:{obs.entity_id}\n"
-                        content += f"{obs.content}\n"
-                        if obs.context:
-                            content += f"**Context:** {obs.context}\n"
-                        if obs.tags:
-                            content += f"**Tags:** {', '.join(obs.tags)}\n"
-                        content += f"**Created:** {obs.created_at}\n\n"
-
-                    return content
-            except Exception as e:
-                logger.error(f"Failed to get user observations resource: {e}")
-                return f"Error loading observations for user {user_id}: {str(e)}"
+            return await self._get_user_observations_inner(user_id)
 
         @self.mcp.resource("memory://hints/{user_id}")
         async def get_user_hints(user_id: str) -> str:
             """Get all hints for a specific user."""
-            try:
-                async with self.db_manager.get_async_session() as session:
-                    hints = await self.memory_service.get_hints_async(
-                        session, user_id=user_id, limit=1000
-                    )
-
-                    content = f"# Hints for user: {user_id}\n\n"
-
-                    # Group by category
-                    categories = {}
-                    for hint in hints:
-                        if hint.category not in categories:
-                            categories[hint.category] = []
-                        categories[hint.category].append(hint)
-
-                    for category, category_hints in categories.items():
-                        content += f"## {category}\n\n"
-                        for hint in sorted(
-                            category_hints, key=lambda h: h.priority, reverse=True
-                        ):
-                            content += (
-                                f"- **Priority {hint.priority}:** {hint.content}\n"
-                            )
-                            if hint.workflow_context:
-                                content += f"  *Context: {hint.workflow_context}*\n"
-                            if hint.tags:
-                                content += f"  *Tags: {', '.join(hint.tags)}*\n"
-                        content += "\n"
-
-                    return content
-            except Exception as e:
-                logger.error(f"Failed to get user hints resource: {e}")
-                return f"Error loading hints for user {user_id}: {str(e)}"
+            return await self._get_user_hints_inner(user_id)
 
         @self.mcp.resource("memory://all/{user_id}")
         async def get_all_user_memories(user_id: str) -> str:
             """Get all memories for a specific user."""
-            try:
-                async with self.db_manager.get_async_session() as session:
-                    content = f"# All Memories for user: {user_id}\n\n"
+            return await self._get_all_user_memories_inner(user_id)
 
-                    # Get aliases
-                    aliases = await self.memory_service.get_aliases_async(
-                        session, user_id=user_id, limit=1000
-                    )
-                    content += f"## Aliases ({len(aliases)})\n\n"
-                    for alias in aliases:
-                        direction = "↔" if alias.bidirectional else "→"
-                        content += f"- {alias.source} {direction} {alias.target}\n"
-                        if alias.tags:
-                            content += f"  Tags: {', '.join(alias.tags)}\n"
+    async def _get_all_user_memories_inner(self, user_id: str) -> str:
+        try:
+            async with self.db_manager.get_async_session() as session:
+                content = f"# All Memories for user: {user_id}\n\n"
+
+                # Get aliases
+                aliases = await self.memory_service.get_aliases_async(
+                    session, user_id=user_id, limit=1000
+                )
+                content += f"## Aliases ({len(aliases)})\n\n"
+                for alias in aliases:
+                    direction = "↔" if alias.bidirectional else "→"
+                    content += f"- {alias.source} {direction} {alias.target}\n"
+                    if alias.tags:
+                        content += f"  Tags: {', '.join(alias.tags)}\n"
+                content += "\n"
+
+                # Get notes
+                notes = await self.memory_service.get_notes_async(
+                    session, user_id=user_id, limit=1000
+                )
+                content += f"## Notes ({len(notes)})\n\n"
+                for note in notes:
+                    content += f"### {note.title}\n"
+                    content += f"{note.content}\n"
+                    if note.category:
+                        content += f"*Category: {note.category}*\n"
+                    if note.tags:
+                        content += f"*Tags: {', '.join(note.tags)}*\n"
                     content += "\n"
 
-                    # Get notes
-                    notes = await self.memory_service.get_notes_async(
-                        session, user_id=user_id, limit=1000
-                    )
-                    content += f"## Notes ({len(notes)})\n\n"
-                    for note in notes:
-                        content += f"### {note.title}\n"
-                        content += f"{note.content}\n"
-                        if note.category:
-                            content += f"*Category: {note.category}*\n"
-                        if note.tags:
-                            content += f"*Tags: {', '.join(note.tags)}*\n"
-                        content += "\n"
+                # Get observations
+                observations = await self.memory_service.get_observations_async(
+                    session, user_id=user_id, limit=1000
+                )
+                content += f"## Observations ({len(observations)})\n\n"
+                for obs in observations:
+                    content += f"### {obs.entity_type}: {obs.entity_id}\n"
+                    content += f"{obs.content}\n"
+                    if obs.tags:
+                        content += f"*Tags: {', '.join(obs.tags)}*\n"
+                    content += "\n"
 
-                    # Get observations
-                    observations = await self.memory_service.get_observations_async(
-                        session, user_id=user_id, limit=1000
-                    )
-                    content += f"## Observations ({len(observations)})\n\n"
-                    for obs in observations:
-                        content += f"### {obs.entity_type}: {obs.entity_id}\n"
-                        content += f"{obs.content}\n"
-                        if obs.tags:
-                            content += f"*Tags: {', '.join(obs.tags)}*\n"
-                        content += "\n"
+                # Get hints
+                hints = await self.memory_service.get_hints_async(
+                    session, user_id=user_id, limit=1000
+                )
+                content += f"## Hints ({len(hints)})\n\n"
+                for hint in hints:
+                    content += f"### {hint.category} (Priority: {hint.priority})\n"
+                    content += f"{hint.content}\n"
+                    if hint.tags:
+                        content += f"*Tags: {', '.join(hint.tags)}*\n"
+                    content += "\n"
 
-                    # Get hints
-                    hints = await self.memory_service.get_hints_async(
-                        session, user_id=user_id, limit=1000
-                    )
-                    content += f"## Hints ({len(hints)})\n\n"
-                    for hint in hints:
-                        content += f"### {hint.category} (Priority: {hint.priority})\n"
-                        content += f"{hint.content}\n"
+                return content
+        except Exception as e:
+            logger.error(f"Failed to get all user memories resource: {e}")
+            return f"Error loading all memories for user {user_id}: {str(e)}"
+
+    async def _get_user_aliases_inner(self, user_id: str) -> str:
+        """Inner method to get all aliases for a specific user."""
+        try:
+            async with self.db_manager.get_async_session() as session:
+                aliases = await self.memory_service.get_aliases_async(
+                    session, user_id=user_id, limit=1000
+                )
+
+                content = f"# Aliases for user: {user_id}\n\n"
+                for alias in aliases:
+                    direction = "↔" if alias.bidirectional else "→"
+                    content += f"- {alias.source} {direction} {alias.target}\n"
+                    if alias.tags:
+                        content += f"  **Tags:** {', '.join(alias.tags)}\n"
+                    content += f"  **Created:** {alias.created_at}\n\n"
+
+                return content
+        except Exception as e:
+            logger.error(f"Failed to get user aliases resource: {e}")
+            return f"Error loading aliases for user {user_id}: {str(e)}"
+
+    async def _get_user_notes_inner(self, user_id: str) -> str:
+        """Inner method to get all notes for a specific user."""
+        try:
+            async with self.db_manager.get_async_session() as session:
+                notes = await self.memory_service.get_notes_async(
+                    session, user_id=user_id, limit=1000
+                )
+
+                content = f"# Notes for user: {user_id}\n\n"
+                for note in notes:
+                    content += f"## {note.title}\n"
+                    if note.category:
+                        content += f"**Category:** {note.category}\n"
+                    content += f"{note.content}\n"
+                    if note.tags:
+                        content += f"**Tags:** {', '.join(note.tags)}\n"
+                    content += f"**Created:** {note.created_at}\n\n"
+
+                return content
+        except Exception as e:
+            logger.error(f"Failed to get user notes resource: {e}")
+            return f"Error loading notes for user {user_id}: {str(e)}"
+
+    async def _get_user_observations_inner(self, user_id: str) -> str:
+        """Inner method to get all observations for a specific user."""
+        try:
+            async with self.db_manager.get_async_session() as session:
+                observations = await self.memory_service.get_observations_async(
+                    session, user_id=user_id, limit=1000
+                )
+
+                content = f"# Observations for user: {user_id}\n\n"
+                for obs in observations:
+                    content += f"## {obs.entity_type}:{obs.entity_id}\n"
+                    content += f"{obs.content}\n"
+                    if obs.context:
+                        content += f"**Context:** {obs.context}\n"
+                    if obs.tags:
+                        content += f"**Tags:** {', '.join(obs.tags)}\n"
+                    content += f"**Created:** {obs.created_at}\n\n"
+
+                return content
+        except Exception as e:
+            logger.error(f"Failed to get user observations resource: {e}")
+            return f"Error loading observations for user {user_id}: {str(e)}"
+
+    async def _get_user_hints_inner(self, user_id: str) -> str:
+        """Inner method to get all hints for a specific user."""
+        try:
+            async with self.db_manager.get_async_session() as session:
+                hints = await self.memory_service.get_hints_async(
+                    session, user_id=user_id, limit=1000
+                )
+
+                content = f"# Hints for user: {user_id}\n\n"
+
+                # Group by category
+                categories = {}
+                for hint in hints:
+                    if hint.category not in categories:
+                        categories[hint.category] = []
+                    categories[hint.category].append(hint)
+
+                for category, category_hints in categories.items():
+                    content += f"## {category}\n\n"
+                    for hint in sorted(
+                        category_hints, key=lambda h: h.priority, reverse=True
+                    ):
+                        content += (
+                            f"- **Priority {hint.priority}:** {hint.content}\n"
+                        )
+                        if hint.workflow_context:
+                            content += f"  *Context: {hint.workflow_context}*\n"
                         if hint.tags:
-                            content += f"*Tags: {', '.join(hint.tags)}*\n"
-                        content += "\n"
+                            content += f"  *Tags: {', '.join(hint.tags)}*\n"
+                    content += "\n"
 
-                    return content
-            except Exception as e:
-                logger.error(f"Failed to get all user memories resource: {e}")
-                return f"Error loading all memories for user {user_id}: {str(e)}"
+                return content
+        except Exception as e:
+            logger.error(f"Failed to get user hints resource: {e}")
+            return f"Error loading hints for user {user_id}: {str(e)}"
 
     def get_mcp_server(self) -> FastMCP:
         """Get the configured FastMCP server instance."""

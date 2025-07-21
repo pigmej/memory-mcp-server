@@ -2,7 +2,7 @@
 
 from datetime import UTC, datetime
 from enum import Enum
-from typing import List, Optional
+from typing import Any, List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -70,3 +70,13 @@ class BaseMemory(BaseModel):
     def has_tag(self, tag: str) -> bool:
         """Check if the memory has a specific tag."""
         return tag.strip() in self.tags
+
+
+    def model_dump_compact(self, *args, **kwargs) -> dict[str, Any]:
+        exclude = kwargs.get("exclude", [])
+        exclude.extend([
+            'created_at',
+            'updated_at'
+        ])
+        kwargs['exclude'] = exclude
+        return self.model_dump(*args, **kwargs)
