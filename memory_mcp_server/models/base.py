@@ -71,12 +71,8 @@ class BaseMemory(BaseModel):
         """Check if the memory has a specific tag."""
         return tag.strip() in self.tags
 
-
     def model_dump_compact(self, *args, **kwargs) -> dict[str, Any]:
         exclude = kwargs.get("exclude", [])
-        exclude.extend([
-            'created_at',
-            'updated_at'
-        ])
-        kwargs['exclude'] = exclude
+        exclude.extend(["created_at", "updated_at"])
+        kwargs["exclude"] = exclude
         return self.model_dump(*args, **kwargs)

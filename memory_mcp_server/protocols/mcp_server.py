@@ -956,9 +956,7 @@ class MemoryMCPServer:
                     for hint in sorted(
                         category_hints, key=lambda h: h.priority, reverse=True
                     ):
-                        content += (
-                            f"- **Priority {hint.priority}:** {hint.content}\n"
-                        )
+                        content += f"- **Priority {hint.priority}:** {hint.content}\n"
                         if hint.workflow_context:
                             content += f"  *Context: {hint.workflow_context}*\n"
                         if hint.tags:
